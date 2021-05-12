@@ -14,8 +14,14 @@ export class Fractal extends Scene {
         };
 
         this.materials = {
-            test: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#cdcd23")})
+            gold: new Material(new defs.Phong_Shader(),
+                {ambient: 0.17375, diffusivity: 0.5282, specularity: 0.516716, smoothness: 51.2, color: hex_color("#D4AF37")}),
+            silver: new Material(new defs.Phong_Shader(),
+                {ambient: 0.19225, diffusivity: 0.50754, specularity: 0.508273, smoothness: 51.2, color: hex_color("#C0C0C0")}),
+            jade: new Material(new defs.Phong_Shader(),
+                {ambient: 0.17166, diffusivity: 0.68666, specularity: 0.316228, smoothness: 12.8, color: hex_color("#00A86B")}),
+            ruby: new Material(new defs.Phong_Shader(),
+                {ambient: 0.066, diffusivity: 0.23232, specularity: 0.660576, smoothness: 76.8, color: hex_color("#E0115F")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -42,7 +48,7 @@ export class Fractal extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        const light_position = vec4(0, 5, 5, 1);
+        const light_position = vec4(11, 11, 11, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
@@ -74,7 +80,7 @@ export class Fractal extends Scene {
         }
 
         for (var i = 0; i < boxes.length; i++) {
-            this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), this.materials.test);
+            this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), this.materials.ruby);
         }
     }
 }
