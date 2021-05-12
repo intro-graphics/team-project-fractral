@@ -18,7 +18,7 @@ export class Fractal extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#cdcd23")})
         };
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 0, 400), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
     make_control_panel() {
@@ -49,85 +49,57 @@ export class Fractal extends Scene {
 
 
         var level;
-        var width = 60;
+        var width = 10;
         if (this.attached === undefined) {
             level = 0;
         } else {
             level = this.attached();
         }
-        level += 1;
         let cube_transform = Mat4.identity();
-        // this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.scale(width, width, width)).times(Mat4.translation(width*2, width*2, width*2)), this.materials.test);
-        // this.shapes.cube.draw(context, program_state, cube_transform, this.materials.test);
-        this.mengerCube(context, program_state, cube_transform,  -width, -width, -width, width, 0, level);
-    }
 
+        var boxes = [];
+        var b = new Box(0, 0, 0, width);
+        boxes.push(b);
 
-
-
-    /**
-     * @param context
-     * @param program_state
-     * @param cube_transform
-     * @param x     - starting x pixel index of the sponge
-     * @param y     - starting y pixel index of the sponge
-     * @param z     - starting z pixel index of the sponge
-     * @param width - width of the cube to be added
-     * @param current
-     * @param level
-     */
-
-    mengerCube(context, program_state, cube_transform, x, y, z, width, current, level) {
-        if (level < 0) {
-            return;
-        } else if (level == 0) {
-            this.drawCube(context, program_state, cube_transform, 0, 0, 0, x, y, z, 3 * width);
-            return;
+        if (level !== 0) {
+            for (var i = 0; i < level; i++) {
+                var next = [];
+                for (var j = 0; j < boxes.length; j++) {
+                    var b = boxes[j];
+                    var new_boxes = b.generate();
+                    next = next.concat(new_boxes);
+                }
+                boxes = next;
+            }
         }
 
-        for (var i = 0; i <= 2; i++) {
-            for (var j = 0; j <= 2; j++) {
-                for (var k = 0; k <=2; k++) {
-                    var num = 0;
-                    if (i==1) num++;
-                    if (j==1) num++;
-                    if (k==1) num++;
+        for (var i = 0; i < boxes.length; i++) {
+            this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), this.materials.test);
+        }
+    }
+}
 
+function Box(x, y, z, r) {
+    this.pos = vec3(x, y, z);
+    this.r = r;
 
-                    if (num < 2) {
-                        if (current < level-1) {
-                            this.mengerCube(context, program_state, cube_transform, (x + i * width), (y + j * width), (z + k * width), width/3, current + 1, level);
-                        } else if (current == level-1) {
-                            this.drawCube(context, program_state, cube_transform, i, j, k, x, y, z, width);
-                        }
+    this.generate = function() {
+        let boxes = [];
+        for (let x = -1; x < 2; x++) {
+            for (let y = -1; y < 2; y++) {
+                for (let z = -1; z < 2; z++) {
+                    let sum = Math.abs(x) + Math.abs(y) + Math.abs(z);
+                    let newR = r / 3;
+
+                    if (sum > 1) {
+                        let b = new Box(this.pos[0] + x * newR*2, this.pos[1] + y * newR*2, this.pos[2] + z * newR*2, newR);
+                        boxes.push(b)
                     }
                 }
             }
         }
-    }
-
-    /**
-     * @param context
-     * @param program_state
-     * @param cube_transform
-     * @param i     - x index out of 2 of the cubes in the sponge
-     * @param j     - y index out of 2 of the cubes in the sponge
-     * @param k     - z index out of 2 of the cubes in the sponge
-     * @param x     - starting x pixel index of the sponge
-     * @param y     - starting y pixel index of the sponge
-     * @param z     - starting z pixel index of the sponge
-     * @param width - width of the cube to be added
-     */
-
-    drawCube(context, program_state, cube_transform, i, j, k, x, y, z, width)
-    {
-        // Set the position of the cube
-
-        cube_transform = cube_transform.times(Mat4.translation(x + (i)*width/2, y + (j)*width/2, z + (k)*width/2));
-        cube_transform = cube_transform.times(Mat4.scale(width, width, width));
-
-        this.shapes.cube.draw(context, program_state, cube_transform, this.materials.test);
-    }
+        return boxes;
+    };
 }
 
 
