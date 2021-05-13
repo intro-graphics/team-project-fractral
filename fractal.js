@@ -1,7 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
 export class Fractal extends Scene {
@@ -22,6 +22,18 @@ export class Fractal extends Scene {
                 {ambient: 0.17166, diffusivity: 0.68666, specularity: 0.316228, smoothness: 12.8, color: hex_color("#00A86B")}),
             ruby: new Material(new defs.Phong_Shader(),
                 {ambient: 0.066, diffusivity: 0.23232, specularity: 0.660576, smoothness: 76.8, color: hex_color("#E0115F")}),
+            earthTop: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthTop.png")}),
+            earthBottom: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthBottom.png")}),
+            earthLeft: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthLeft.png")}),
+            earthRight: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthRight.png")}),
+            earthFront: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthFront.png")}),
+            earthBack: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/earthBack.png")})
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -33,6 +45,10 @@ export class Fractal extends Scene {
         this.key_triggered_button("Level 2", ["Control", "2"], () => this.attached = () => 2);
         this.key_triggered_button("Level 3", ["Control", "3"], () => this.attached = () => 3);
         this.key_triggered_button("Level 4", ["Control", "4"], () => this.attached = () => 4);
+        this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
+        this.key_triggered_button("Earth environment", ["Control", "e"], () => this.attached = () => "earth");
+
+
     }
 
     display(context, program_state) {
@@ -47,6 +63,48 @@ export class Fractal extends Scene {
 
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
+
+
+        if (this.attached !== undefined) {
+
+            let envirmnt = this.attached();
+
+            if (envirmnt == "earth") {
+                const light_position = vec4(100, 100, 100, 1);
+                program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+                let earthBackTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 0, -250))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthBackTransform, this.materials.earthBack);
+                let earthFrontTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 0, 250))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthFrontTransform, this.materials.earthFront);
+                let earthLeftTransform = Mat4.identity()
+                    .times(Mat4.translation(-250, 0, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthLeftTransform, this.materials.earthLeft);
+                let earthRightTransform = Mat4.identity()
+                    .times(Mat4.translation(250, 0, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthRightTransform, this.materials.earthRight);
+                let earthTopTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 250, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthTopTransform, this.materials.earthTop);
+                let earthBottomTransform = Mat4.identity()
+                    .times(Mat4.translation(0, -250, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthBottomTransform, this.materials.earthBottom);
+            }
+            else if (envirmnt == "space") {
+                program_state.set_camera(this.initial_camera_location)
+            }
+        }
 
         const light_position = vec4(11, 11, 11, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
