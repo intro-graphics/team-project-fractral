@@ -8,11 +8,12 @@ export class Fractal extends Scene {
     constructor() {
         // Constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-
+		
         this.shapes = {
             cube: new defs.Cube()
         };
-
+		
+		
         this.materials = {
             gold: new Material(new defs.Phong_Shader(),
                 {ambient: 0.17375, diffusivity: 0.5282, specularity: 0.516716, smoothness: 51.2, color: hex_color("#D4AF37")}),
@@ -40,14 +41,20 @@ export class Fractal extends Scene {
     }
 
     make_control_panel() {
-        this.key_triggered_button("Level 0", ["Control", "0"], () => this.attached = () => 0);
-        this.key_triggered_button("Level 1", ["Control", "1"], () => this.attached = () => 1);
-        this.key_triggered_button("Level 2", ["Control", "2"], () => this.attached = () => 2);
-        this.key_triggered_button("Level 3", ["Control", "3"], () => this.attached = () => 3);
-        this.key_triggered_button("Level 4", ["Control", "4"], () => this.attached = () => 4);
+        this.key_triggered_button("Level 0", ["Control", "0"], () => this.attachedLevel = () => 0);
+        this.key_triggered_button("Level 1", ["Control", "1"], () => this.attachedLevel = () => 1);
+        this.key_triggered_button("Level 2", ["Control", "2"], () => this.attachedLevel = () => 2);
+        this.key_triggered_button("Level 3", ["Control", "3"], () => this.attachedLevel = () => 3);
+        this.key_triggered_button("Level 4", ["Control", "4"], () => this.attachedLevel = () => 4);
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("Earth environment", ["Control", "e"], () => this.attached = () => "earth");
+        this.key_triggered_button("Cube Fractal", ["Control", "c"], () => this.attachedShpe = () => 100);
+        this.key_triggered_button("Pyramid Fractal", ["Control", "p"], () => this.attachedShpe = () => 101);
 
+        this.key_triggered_button("Gold Color", ["Control", "g"], () => this.attachedColor = () => "gold");
+        this.key_triggered_button("Silver Color", ["Control", "l"], () => this.attachedColor = () => "silver");
+        this.key_triggered_button("Jade Color", ["Control", "j"], () => this.attachedColor = () => "jade");
+        this.key_triggered_button("Ruby Color", ["Control", "r"], () => this.attachedColor = () => "ruby");
 
     }
 
@@ -111,35 +118,57 @@ export class Fractal extends Scene {
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
+        var pickedMaterial;
+		if (this.attachedColor == "jade") { // color------------------------------------------------------------------------------------
+            pickedMaterial = this.materials.jade;
+		}
+		else if (this.attachedColor == "silver") {
+            pickedMaterial = this.materials.silver;
+		}
+		else if (this.attachedColor == "gold") {
+            pickedMaterial = this.materials.gold;
+		}
+		else if (this.attachedColor == "ruby") {
+            pickedMaterial = this.materials.ruby;
+		}
+		else if (this.attachedColor === undefined)
+		{
+            pickedMaterial = this.materials.ruby;
+		}
 
         var level;
         var width = 10;
-        if (this.attached === undefined) {
+        if (this.attachedLevel === undefined) {
             level = 0;
         } else {
-            level = this.attached();
+            level = this.attachedLevel();
         }
-        let cube_transform = Mat4.identity();
+		
+		
+		if ((this.attachedShpe == 100) || (this.attachedShpe === undefined)) { // cube-----------------------------------------------------------------
+			let cube_transform = Mat4.identity();
 
-        var boxes = [];
-        var b = new Box(0, 0, 0, width);
-        boxes.push(b);
+			var boxes = [];
+			var b = new Box(0, 0, 0, width);
+			boxes.push(b);
 
-        if (level !== 0) {
-            for (var i = 0; i < level; i++) {
-                var next = [];
-                for (var j = 0; j < boxes.length; j++) {
-                    var b = boxes[j];
-                    var new_boxes = b.generate();
-                    next = next.concat(new_boxes);
-                }
-                boxes = next;
-            }
-        }
-
-        for (var i = 0; i < boxes.length; i++) {
-            this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), this.materials.ruby);
-        }
+			if (level !== 0) {
+				for (var i = 0; i < level; i++) {
+					var next = [];
+					for (var j = 0; j < boxes.length; j++) {
+						var b = boxes[j];
+						var new_boxes = b.generate();
+						next = next.concat(new_boxes);
+					}
+					boxes = next;
+				}
+			}
+			for (var i = 0; i < boxes.length; i++) {
+				this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+			}
+		}
+		else if (this.attachedShpe == 101) { // pyramid----------------------------------------------------------------------------------------
+		}
     }
 }
 
