@@ -16,13 +16,13 @@ export class Fractal extends Scene {
 		
 		
         this.materials = {
-            gold: new Material(new defs.Phong_Shader(),
+            gold: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.17375, diffusivity: 0.5282, specularity: 0.516716, smoothness: 51.2, color: hex_color("#D4AF37")}),
-            silver: new Material(new defs.Phong_Shader(),
+            silver: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.19225, diffusivity: 0.50754, specularity: 0.508273, smoothness: 51.2, color: hex_color("#C0C0C0")}),
-            jade: new Material(new defs.Phong_Shader(),
+            jade: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.17166, diffusivity: 0.68666, specularity: 0.316228, smoothness: 12.8, color: hex_color("#00A86B")}),
-            ruby: new Material(new defs.Phong_Shader(),
+            ruby: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.066, diffusivity: 0.23232, specularity: 0.660576, smoothness: 76.8, color: hex_color("#E0115F")}),
             earthSphereBG: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/earth_8k.png")})
