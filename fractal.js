@@ -24,8 +24,18 @@ export class Fractal extends Scene {
                 {ambient: 0.17166, diffusivity: 0.68666, specularity: 0.316228, smoothness: 12.8, color: hex_color("#00A86B")}),
             ruby: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.066, diffusivity: 0.23232, specularity: 0.660576, smoothness: 76.8, color: hex_color("#E0115F")}),
-            earthSphereBG: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/earth_8k.png")})
+            earthTop: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/py.png")}),
+            earthBottom: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/ny.png")}),
+            earthLeft: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/nx.png")}),
+            earthRight: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/px.png")}),
+            earthFront: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/pz.png")}),
+            earthBack: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/nz.png")})
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -70,10 +80,34 @@ export class Fractal extends Scene {
             if (envirmnt == "earth") {
                 const light_position = vec4(100, 100, 100, 1);
                 program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-
-                let earthTransform = Mat4.identity()
-                    .times(Mat4.scale(500, 500, 500));
-                this.shapes.sphere4.draw(context, program_state, earthTransform, this.materials.earthSphereBG);
+                let earthBackTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 0, -250))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthBackTransform, this.materials.earthBack);
+                let earthFrontTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 0, 250))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthFrontTransform, this.materials.earthFront);
+                let earthLeftTransform = Mat4.identity()
+                    .times(Mat4.translation(-250, 0, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthLeftTransform, this.materials.earthLeft);
+                let earthRightTransform = Mat4.identity()
+                    .times(Mat4.translation(250, 0, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthRightTransform, this.materials.earthRight);
+                let earthTopTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 250, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthTopTransform, this.materials.earthTop);
+                let earthBottomTransform = Mat4.identity()
+                    .times(Mat4.translation(0, -250, 0))
+                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
+                    .times(Mat4.scale(500, 500, 1));
+                this.shapes.cube.draw(context, program_state, earthBottomTransform, this.materials.earthBottom);
             }
             else if (envirmnt == "space") {
                 program_state.set_camera(this.initial_camera_location)
