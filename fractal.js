@@ -4,6 +4,29 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
+class Pyramid extends Shape {
+    constructor() {
+        super("position", "normal",);
+
+        this.arrays.position = Vector3.cast(
+            [-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1],
+            [0, 0.414, 0], [-1, -1, 1], [1, -1, 1],
+            [0, 0.414, 0], [1, -1, 1], [1, -1, -1],
+            [0, 0.414, 0], [1, -1, -1], [-1, -1, -1],
+            [0, 0.414, 0], [-1, -1, -1], [-1, -1, 1]);
+
+        this.arrays.normal = Vector3.cast(
+            [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0],
+            [0, 2, 2.828], [0, 2, 2.828], [0, 2, 2.828], [0, 2, 2.828],
+            [2.818, 2, 0], [2.818, 2, 0], [2.818, 2, 0], [2.818, 2, 0],
+            [0, -2, 2.828], [0, -2, 2.828], [0, -2, 2.828], [0, -2, 2.828],
+            [-2.828, 2, 0], [-2.828, 2, 0], [-2.828, 2, 0], [-2.828, 2, 0]);
+
+
+        this.indices.push(0, 1, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    }
+}
+
 export class Fractal extends Scene {
     constructor() {
         // Constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
@@ -11,7 +34,8 @@ export class Fractal extends Scene {
 		
         this.shapes = {
             cube: new defs.Cube(),
-            sphere4: new defs.Subdivision_Sphere(4)
+            sphere4: new defs.Subdivision_Sphere(4),
+            pyramid: new Pyramid()
         };
 		
 		
@@ -141,6 +165,7 @@ export class Fractal extends Scene {
 
         var level;
         var width = 10;
+        let loc_transform = Mat4.identity();
         if (this.attachedLevel === undefined) {
             level = 0;
         } else {
@@ -149,8 +174,6 @@ export class Fractal extends Scene {
 		
 		if (this.attachedShpe) {
 			if (this.attachedShpe === undefined) {
-				let cube_transform = Mat4.identity();
-
 				var boxes = [];
 				var b = new Box(0, 0, 0, width);
 				boxes.push(b);
@@ -167,11 +190,10 @@ export class Fractal extends Scene {
 					}
 				}
 				for (var i = 0; i < boxes.length; i++) {
-					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+					this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
 				}
 			}
 			else if (this.attachedShpe() == 100) { // cube-----------------------------------------------------------------
-				let cube_transform = Mat4.identity();
 
 				var boxes = [];
 				var b = new Box(0, 0, 0, width);
@@ -189,14 +211,33 @@ export class Fractal extends Scene {
 					}
 				}
 				for (var i = 0; i < boxes.length; i++) {
-					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+					this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
 				}
 			}
 			else if (this.attachedShpe() == 101) { // pyramid----------------------------------------------------------------------------------------
+                var pyramids = [];
+
+                var p = new Fractal_pyramid(0, 0, 0, width, level);
+                pyramids.push(p);
+
+                if (level !== 0) {
+                    for (var i = 0; i < level; i++) {
+                        var next = [];
+                        for (var j = 0; j < pyramids.length; j++) {
+                            var b = pyramids[j];
+                            var new_pyramids = b.generate();
+                            next = next.concat(new_pyramids);
+                        }
+                        pyramids = next;
+                    }
+                }
+
+                for (var i = 0; i < pyramids.length; i++) {
+                    this.shapes.pyramid.draw(context, program_state, loc_transform.times(Mat4.translation(pyramids[i].pos[0], pyramids[i].pos[1], pyramids[i].pos[2])).times(Mat4.scale(pyramids[i].w, pyramids[i].w, pyramids[i].w)), pickedMaterial);
+                }
 			}
 		}
 		else {
-			let cube_transform = Mat4.identity();
 
 				var boxes = [];
 				var b = new Box(0, 0, 0, width);
@@ -214,7 +255,7 @@ export class Fractal extends Scene {
 					}
 				}
 				for (var i = 0; i < boxes.length; i++) {
-					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+					this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
 				}
 		}
     }
@@ -243,4 +284,33 @@ function Box(x, y, z, r) {
     };
 }
 
+function Fractal_pyramid(x, y, z, width, level) {
+    this.pos = vec3(x, y, z);
+    this.w = width;
+
+    this.generate = function() {
+        let pyramids = [];
+
+        let new_width = this.w / 2;
+        let height = Math.sqrt(2) / 2 * this.w;
+
+        for (var l = 1; l >=0; l--) {
+            for (var x = -1; x <= 1; x++) {
+                for (var z = -1; z <= 1; z++) {
+                    if ((x === 0 || z === 0) && l !== 1) {
+                        continue;
+                    }
+                    if(l === 1) {
+                        let b = new Fractal_pyramid(this.pos[0], this.pos[1]-width/2 + l * height, this.pos[2], new_width, level);
+                        pyramids.push(b);
+                    } else {
+                        let b = new Fractal_pyramid(this.pos[0] + x * new_width, this.pos[1]-width/2 + l * height, this.pos[2] + z * new_width, new_width, level);
+                        pyramids.push(b);
+                    }
+                }
+            }
+        }
+        return pyramids;
+    };
+}
 
