@@ -108,30 +108,75 @@ export class Fractal extends Scene {
             level = this.attachedLevel();
         }
 		
-		
-		if ((this.attachedShpe == 100) || (this.attachedShpe === undefined)) { // cube-----------------------------------------------------------------
-			let cube_transform = Mat4.identity();
+		if (this.attachedShpe) {
+			if (this.attachedShpe === undefined) {
+				let cube_transform = Mat4.identity();
 
-			var boxes = [];
-			var b = new Box(0, 0, 0, width);
-			boxes.push(b);
+				var boxes = [];
+				var b = new Box(0, 0, 0, width);
+				boxes.push(b);
 
-			if (level !== 0) {
-				for (var i = 0; i < level; i++) {
-					var next = [];
-					for (var j = 0; j < boxes.length; j++) {
-						var b = boxes[j];
-						var new_boxes = b.generate();
-						next = next.concat(new_boxes);
+				if (level !== 0) {
+					for (var i = 0; i < level; i++) {
+						var next = [];
+						for (var j = 0; j < boxes.length; j++) {
+							var b = boxes[j];
+							var new_boxes = b.generate();
+							next = next.concat(new_boxes);
+						}
+						boxes = next;
 					}
-					boxes = next;
+				}
+				for (var i = 0; i < boxes.length; i++) {
+					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
 				}
 			}
-			for (var i = 0; i < boxes.length; i++) {
-				this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+			else if (this.attachedShpe() == 100) { // cube-----------------------------------------------------------------
+				let cube_transform = Mat4.identity();
+
+				var boxes = [];
+				var b = new Box(0, 0, 0, width);
+				boxes.push(b);
+
+				if (level !== 0) {
+					for (var i = 0; i < level; i++) {
+						var next = [];
+						for (var j = 0; j < boxes.length; j++) {
+							var b = boxes[j];
+							var new_boxes = b.generate();
+							next = next.concat(new_boxes);
+						}
+						boxes = next;
+					}
+				}
+				for (var i = 0; i < boxes.length; i++) {
+					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+				}
+			}
+			else if (this.attachedShpe() == 101) { // pyramid----------------------------------------------------------------------------------------
 			}
 		}
-		else if (this.attachedShpe == 101) { // pyramid----------------------------------------------------------------------------------------
+		else {
+			let cube_transform = Mat4.identity();
+
+				var boxes = [];
+				var b = new Box(0, 0, 0, width);
+				boxes.push(b);
+
+				if (level !== 0) {
+					for (var i = 0; i < level; i++) {
+						var next = [];
+						for (var j = 0; j < boxes.length; j++) {
+							var b = boxes[j];
+							var new_boxes = b.generate();
+							next = next.concat(new_boxes);
+						}
+						boxes = next;
+					}
+				}
+				for (var i = 0; i < boxes.length; i++) {
+					this.shapes.cube.draw(context, program_state, cube_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+				}
 		}
     }
 }
