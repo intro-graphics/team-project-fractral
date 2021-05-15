@@ -1,5 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
+//import {widgets} from '../tiny-graphics-widgets.js';
+
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
@@ -8,13 +10,12 @@ export class Fractal extends Scene {
     constructor() {
         // Constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-		
+
         this.shapes = {
             cube: new defs.Cube(),
             sphere4: new defs.Subdivision_Sphere(4)
         };
-		
-		
+
         this.materials = {
             gold: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.17375, diffusivity: 0.5282, specularity: 0.516716, smoothness: 51.2, color: hex_color("#D4AF37")}),
@@ -35,8 +36,8 @@ export class Fractal extends Scene {
             earthFront: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/pz.png")}),
             earthBack: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/nz.png")})
-        };
+                {ambient: 1.0, texture: new Texture("assets/nz.png")}),
+        }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
     }
@@ -59,6 +60,8 @@ export class Fractal extends Scene {
         this.key_triggered_button("Ruby Color", ["Control", "r"], () => this.attachedColor = () => "ruby");
     }
 
+
+
     display(context, program_state) {
         // display(): Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -78,35 +81,40 @@ export class Fractal extends Scene {
             let envirmnt = this.attached();
 
             if (envirmnt == "earth") {
+
                 const light_position = vec4(100, 100, 100, 1);
                 program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+
                 let earthBackTransform = Mat4.identity()
-                    .times(Mat4.translation(0, 0, -250))
-                    .times(Mat4.scale(500, 500, 1));
-                this.shapes.cube.draw(context, program_state, earthBackTransform, this.materials.earthBack);
-                let earthFrontTransform = Mat4.identity()
-                    .times(Mat4.translation(0, 0, 250))
-                    .times(Mat4.scale(500, 500, 1));
-                this.shapes.cube.draw(context, program_state, earthFrontTransform, this.materials.earthFront);
-                let earthLeftTransform = Mat4.identity()
                     .times(Mat4.translation(-250, 0, 0))
                     .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
-                    .times(Mat4.scale(500, 500, 1));
+                    .times(Mat4.scale(250, 250, 1));
+                this.shapes.cube.draw(context, program_state, earthBackTransform, this.materials.earthBack);
+                let earthFrontTransform = Mat4.identity()
+                    .times(Mat4.translation(250, 0, 0))
+                    .times(Mat4.rotation(Math.PI * -0.5, 0, 1, 0))
+                    .times(Mat4.scale(250, 250, 1));
+                this.shapes.cube.draw(context, program_state, earthFrontTransform, this.materials.earthFront);
+                let earthLeftTransform = Mat4.identity()
+                    .times(Mat4.translation(0, 0, -250))
+                    .times(Mat4.scale(250, 250, 1));
                 this.shapes.cube.draw(context, program_state, earthLeftTransform, this.materials.earthLeft);
                 let earthRightTransform = Mat4.identity()
-                    .times(Mat4.translation(250, 0, 0))
-                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
-                    .times(Mat4.scale(500, 500, 1));
+                    .times(Mat4.translation(0, 0, 250))
+                    .times(Mat4.rotation(Math.PI, 0, 1, 0))
+                    .times(Mat4.scale(250, 250, 1));
                 this.shapes.cube.draw(context, program_state, earthRightTransform, this.materials.earthRight);
                 let earthTopTransform = Mat4.identity()
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
                     .times(Mat4.translation(0, 250, 0))
-                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
-                    .times(Mat4.scale(500, 500, 1));
+                    .times(Mat4.rotation(Math.PI * -0.5, 1, 0, 0))
+                    .times(Mat4.scale(250, 250, 1));
                 this.shapes.cube.draw(context, program_state, earthTopTransform, this.materials.earthTop);
                 let earthBottomTransform = Mat4.identity()
+                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
                     .times(Mat4.translation(0, -250, 0))
                     .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
-                    .times(Mat4.scale(500, 500, 1));
+                    .times(Mat4.scale(250, 250, 1));
                 this.shapes.cube.draw(context, program_state, earthBottomTransform, this.materials.earthBottom);
             }
             else if (envirmnt == "space") {
@@ -192,5 +200,3 @@ function Box(x, y, z, r) {
         return boxes;
     };
 }
-
-
