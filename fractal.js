@@ -48,18 +48,10 @@ export class Fractal extends Scene {
                 {ambient: 0.17166, diffusivity: 0.68666, specularity: 0.316228, smoothness: 12.8, color: hex_color("#00A86B")}),
             ruby: new Material(new defs.Textured_Reflected_Phong(),
                 {ambient: 0.066, diffusivity: 0.23232, specularity: 0.660576, smoothness: 76.8, color: hex_color("#E0115F")}),
-            earthTop: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/py.png")}),
-            earthBottom: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/ny.png")}),
-            earthLeft: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/nx.png")}),
-            earthRight: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/px.png")}),
-            earthFront: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/pz.png")}),
-            earthBack: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/nz.png")}),
+            snowy: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/snowy.png")}),
+            space: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/stars.png")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -106,40 +98,15 @@ export class Fractal extends Scene {
                 const light_position = vec4(100, 100, 100, 1);
                 program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
-                let earthBackTransform = Mat4.identity()
-                    .times(Mat4.translation(-250, 0, 0))
-                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthBackTransform, this.materials.earthBack);
-                let earthFrontTransform = Mat4.identity()
-                    .times(Mat4.translation(250, 0, 0))
-                    .times(Mat4.rotation(Math.PI * -0.5, 0, 1, 0))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthFrontTransform, this.materials.earthFront);
-                let earthLeftTransform = Mat4.identity()
-                    .times(Mat4.translation(0, 0, -250))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthLeftTransform, this.materials.earthLeft);
-                let earthRightTransform = Mat4.identity()
-                    .times(Mat4.translation(0, 0, 250))
-                    .times(Mat4.rotation(Math.PI, 0, 1, 0))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthRightTransform, this.materials.earthRight);
-                let earthTopTransform = Mat4.identity()
-                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
-                    .times(Mat4.translation(0, 250, 0))
-                    .times(Mat4.rotation(Math.PI * -0.5, 1, 0, 0))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthTopTransform, this.materials.earthTop);
-                let earthBottomTransform = Mat4.identity()
-                    .times(Mat4.rotation(Math.PI * 0.5, 0, 1, 0))
-                    .times(Mat4.translation(0, -250, 0))
-                    .times(Mat4.rotation(Math.PI * 0.5, 1, 0, 0))
-                    .times(Mat4.scale(250, 250, 1));
-                this.shapes.cube.draw(context, program_state, earthBottomTransform, this.materials.earthBottom);
+                let earthTransform = Mat4.identity()
+                    .times(Mat4.scale(500, 500, 500));
+                this.shapes.sphere4.draw(context, program_state, earthTransform, this.materials.snowy);
             }
             else if (envirmnt == "space") {
-                program_state.set_camera(this.initial_camera_location)
+                program_state.set_camera(this.initial_camera_location);
+                let earthTransform = Mat4.identity()
+                    .times(Mat4.scale(500, 500, 500));
+                this.shapes.sphere4.draw(context, program_state, earthTransform, this.materials.space);
             }
         }
 
@@ -173,27 +140,7 @@ export class Fractal extends Scene {
         }
 		
 		if (this.attachedShpe) {
-			if (this.attachedShpe === undefined) {
-				var boxes = [];
-				var b = new Box(0, 0, 0, width);
-				boxes.push(b);
-
-				if (level !== 0) {
-					for (var i = 0; i < level; i++) {
-						var next = [];
-						for (var j = 0; j < boxes.length; j++) {
-							var b = boxes[j];
-							var new_boxes = b.generate();
-							next = next.concat(new_boxes);
-						}
-						boxes = next;
-					}
-				}
-				for (var i = 0; i < boxes.length; i++) {
-					this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
-				}
-			}
-			else if (this.attachedShpe() == 100) { // cube-----------------------------------------------------------------
+            if (this.attachedShpe() == 100) { // cube-----------------------------------------------------------------
 
 				var boxes = [];
 				var b = new Box(0, 0, 0, width);
@@ -238,25 +185,24 @@ export class Fractal extends Scene {
 			}
 		}
 		else {
+			var boxes = [];
+			var b = new Box(0, 0, 0, width);
+			boxes.push(b);
 
-				var boxes = [];
-				var b = new Box(0, 0, 0, width);
-				boxes.push(b);
-
-				if (level !== 0) {
-					for (var i = 0; i < level; i++) {
-						var next = [];
-						for (var j = 0; j < boxes.length; j++) {
-							var b = boxes[j];
-							var new_boxes = b.generate();
-							next = next.concat(new_boxes);
-						}
-						boxes = next;
+			if (level !== 0) {
+				for (var i = 0; i < level; i++) {
+					var next = [];
+					for (var j = 0; j < boxes.length; j++) {
+						var b = boxes[j];
+						var new_boxes = b.generate();
+						next = next.concat(new_boxes);
 					}
+					boxes = next;
 				}
-				for (var i = 0; i < boxes.length; i++) {
-					this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
-				}
+			}
+			for (var i = 0; i < boxes.length; i++) {
+				this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+			}
 		}
     }
 }

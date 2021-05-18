@@ -791,15 +791,6 @@ const Textured_Reflected_Phong = defs.Textured_Reflected_Phong =
                 
                 uniform mat4 model_transform;
                 uniform mat4 projection_camera_model_transform;
-
-                vec2 sphereMap(in vec3 normal, in vec3 ecPosition3) {
-                    float m;
-                    vec3 r, u;
-                    u = normalize(ecPosition3);
-                    r = reflect(u, normal);
-                    m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));
-                    return vec2 (r.x / m + 0.5, r.y / m + 0.5);
-                }
         
                 void main(){                                                                   
                     // The vertex's final resting place (in NDCS):
@@ -808,8 +799,6 @@ const Textured_Reflected_Phong = defs.Textured_Reflected_Phong =
                     N = normalize( mat3( model_transform ) * normal / squared_scale);
                     vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
                     // Turn the per-vertex texture coordinate into an interpolated variable.
-                    reflected_vector = reflect(vertex_worldspace, N);
-                    f_tex_coord = sphereMap(N, reflected_vector);
                 } `;
         }
 
@@ -821,10 +810,21 @@ const Textured_Reflected_Phong = defs.Textured_Reflected_Phong =
                 varying vec2 f_tex_coord;
                 varying vec3 reflected_vector;
                 uniform sampler2D texture;
+
+                vec2 sphereMap(in vec3 normal, in vec3 ecPosition3) {
+                    float m;
+                    vec3 r, u;
+                    u = normalize(ecPosition3);
+                    r = reflect(u, normal);
+                    m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));
+                    return vec2 (r.x / m + 0.5, r.y / m + 0.5);
+                }
         
                 void main(){
                     // Sample the texture image in the correct place:
-                    vec4 tex_color = texture2D( texture, f_tex_coord );
+                    vec3 reflected_vector_dummy = reflect(vertex_worldspace, N);
+                    vec2 f_tex_coord_dummy = sphereMap(N, reflected_vector_dummy);
+                    vec4 tex_color = texture2D( texture, f_tex_coord_dummy );
                     if( tex_color.w < .01 ) discard;
                                                                              // Compute an initial (ambient) color:
                     gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
