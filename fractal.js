@@ -51,10 +51,11 @@ export class Fractal extends Scene {
             snowy: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/snowy.png")}),
             space: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/stars.png")}),
+                {ambient: 1.0, texture: new Texture("assets/SPACE.png")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
+
     }
 
     make_control_panel() {
@@ -88,30 +89,26 @@ export class Fractal extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-
-        if (this.attached !== undefined) {
-
-            let envirmnt = this.attached();
-
-            if (envirmnt == "earth") {
-
-                const light_position = vec4(100, 100, 100, 1);
-                program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-
-                let earthTransform = Mat4.identity()
-                    .times(Mat4.scale(500, 500, 500));
-                this.shapes.sphere4.draw(context, program_state, earthTransform, this.materials.snowy);
-            }
-            else if (envirmnt == "space") {
-                program_state.set_camera(this.initial_camera_location);
-                let earthTransform = Mat4.identity()
-                    .times(Mat4.scale(500, 500, 500));
-                this.shapes.sphere4.draw(context, program_state, earthTransform, this.materials.space);
-            }
-        }
-
         const light_position = vec4(11, 11, 11, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+
+        let envirTransform = Mat4.identity()
+            .times(Mat4.scale(500, 500, 500));
+
+        if (this.attached === undefined) {
+            program_state.set_camera(this.initial_camera_location);
+            this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.space);
+        }
+
+        if (this.attached !== undefined) {
+            let envirmnt = this.attached();
+            if (envirmnt == "earth") {
+                this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.snowy);
+            }
+            else if (envirmnt == "space") {
+                this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.space);
+            }
+        }
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
