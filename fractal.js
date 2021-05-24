@@ -52,6 +52,10 @@ export class Fractal extends Scene {
                 {ambient: 1.0, texture: new Texture("assets/snowy.png")}),
             space: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/SPACE.png")}),
+            whiteTop: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/whiteTop.png")}),
+            whiteGround: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/whiteGround.png")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -66,7 +70,9 @@ export class Fractal extends Scene {
         this.key_triggered_button("Level 4", ["Control", "4"], () => this.attachedLevel = () => 4);
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("Earth environment", ["Control", "e"], () => this.attached = () => "earth");
-        
+        this.key_triggered_button("Earth environment", ["Control", "w"], () => this.attached = () => "white");
+
+
         this.key_triggered_button("Cube Fractal", ["Control", "c"], () => this.attachedShpe = () => 100);
         this.key_triggered_button("Pyramid Fractal", ["Control", "p"], () => this.attachedShpe = () => 101);
 
@@ -95,6 +101,11 @@ export class Fractal extends Scene {
         let envirTransform = Mat4.identity()
             .times(Mat4.scale(500, 500, 500));
 
+        let flatTransform = Mat4.identity()
+            .times(Mat4.translation(0, -100,0))
+            .times(Mat4.scale(500, 0, 500));
+
+
         if (this.attached === undefined) {
             program_state.set_camera(this.initial_camera_location);
             this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.space);
@@ -107,6 +118,10 @@ export class Fractal extends Scene {
             }
             else if (envirmnt == "space") {
                 this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.space);
+            }
+            else if (envirmnt == "white") {
+                this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.whiteTop);
+                this.shapes.cube.draw(context, program_state, flatTransform, this.materials.whiteGround);
             }
         }
 
