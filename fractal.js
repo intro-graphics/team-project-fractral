@@ -137,7 +137,8 @@ export class Fractal extends Scene {
             cube: new defs.Cube(),
             sphere4: new defs.Subdivision_Sphere(4),
             pyramid: new Pyramid(),
-            trunk: new Shape_From_File("assets/tree.obj")
+            trunk: new Shape_From_File("assets/tree_trunk.obj"),
+            branch: new Shape_From_File("assets/tree_branch.obj")
         };
 
 
@@ -186,6 +187,7 @@ export class Fractal extends Scene {
                 {ambient: 1.0, texture: new Texture("assets/grassBG.png")}),
             grassGround: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/grassTex.png")}),
+            tree_texture: new Material(new defs.Phong_Shader(), {ambient: 0.5, diffusivity: 0.5, color: hex_color("#8B4513")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -348,6 +350,12 @@ export class Fractal extends Scene {
                     this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
                 }
             }
+        } else {
+            let model_transform_tree = Mat4.identity().times(Mat4.translation(-10, 0, 0)).times(Mat4.scale(10, 10, 10));
+            this.shapes.trunk.draw(context, program_state, model_transform_tree, this.materials.tree_texture); 
+
+            let model_transform_branch = Mat4.identity().times(Mat4.translation(10, 0, 0)).times(Mat4.scale(10, 10, 10));
+            this.shapes.branch.draw(context, program_state, model_transform_branch, this.materials.tree_texture);
         }
     }
 }
