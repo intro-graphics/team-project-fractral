@@ -158,8 +158,6 @@ export class Fractal extends Scene {
                 {ambient: 1.0, texture: new Texture("assets/whiteTop.png")}),
             whiteGround: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/whiteGround.png")}),
-            oak: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 0.5, texture: new Texture("assets/oak.jpg")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 50), vec3(0, 0, 0), vec3(0, 1, 0));
