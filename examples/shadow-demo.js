@@ -1,7 +1,12 @@
 import {defs, tiny} from './common.js';
 // Pull these names into this module's scope for convenience:
-const {vec3, vec4, vec, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene} = tiny;
+const {vec3, vec4, vec, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene, hex_color} = tiny;
 const {Cube, Axis_Arrows, Textured_Phong, Phong_Shader, Basic_Shader, Subdivision_Sphere} = defs
+
+let tree_array = [];
+let flag = 1;
+let x2 = getRandomInt(-20, 20);
+let z2 = getRandomInt(-20, 20);
 
 export class Shape_From_File extends Shape {                                   // **Shape_From_File** is a versatile standalone Shape that imports
                                                                                // all its arrays' data from an .obj 3D model file.
@@ -140,6 +145,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.shapes = {
             "teapot": new Shape_From_File("assets/teapot.obj"),
             "trunk": new Shape_From_File("assets/tree_trunk.obj"),
+            "branch": new Shape_From_File("assets/tree_branch.obj"),
             "sphere": new Subdivision_Sphere(6),
             "cube": new Cube(),
             "square_2d": new Square(),
@@ -148,16 +154,25 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         // // Don't create any DOM elements to control this scene:
         // this.widget_options = {make_controls: false};
         // Non bump mapped:
-        this.stars = new Material(new Shadow_Textured_Phong(1), {
-            color: color(.5, .5, .5, 1),
+        this.oak = new Material(new Shadow_Textured_Phong(1), {
+            color: hex_color("#53350A"),
             ambient: .3, diffusivity: .5, specularity: .5,
-            color_texture: new Texture("assets/stars.png"),
+            color_texture: new Texture("assets/brown.png"),
             light_depth_texture: null
-
         });
         // For the floor
         this.floor = new Material(new Shadow_Textured_Phong(1), {
-            color: color(1, 1, 1, 1), ambient: .4, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
+            color: hex_color("#53350A"), ambient: .4, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
+            color_texture: null,
+            light_depth_texture: null
+        })
+        this.soil = new Material(new Shadow_Textured_Phong(1), {
+            color: hex_color("#836539"), ambient: .4, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
+            color_texture: null,
+            light_depth_texture: null
+        })
+        this.oak2 = new Material(new Shadow_Textured_Phong(1), {
+            color: hex_color("#53350A"), ambient: .4, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
             color_texture: null,
             light_depth_texture: null
         })
@@ -202,8 +217,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.lightDepthTexture = gl.createTexture();
         // Bind it to TinyGraphics
         this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
-        this.stars.light_depth_texture = this.light_depth_texture
-        this.floor.light_depth_texture = this.light_depth_texture
+        this.oak.light_depth_texture = this.light_depth_texture
+        this.soil.light_depth_texture = this.light_depth_texture
 
         this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
         gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
@@ -275,13 +290,38 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 this.light_src.override({color: light_color}));
         }
 
-        for (let i of [-1, 1]) { // Spin the 3D model shapes as well.
-            const model_transform = Mat4.translation(2 * i, 1, 0);
-            this.shapes.trunk.draw(context, program_state, model_transform, shadow_pass? this.stars : this.pure);
-        }
+        let model_trans_floor = Mat4.scale(100, 0.1, 100);
+        this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
+        if(flag) {
+            let result = angle_generator(4);
+            let result_location = location_calc(result);
+            result.push(result_location);
+            tree_array.push(result);
+            flag = 0;
+        } else {
+            for(let x = 0; x < tree_array.length; x++) {
+                let content = tree_array[x];
+                let lengths = content[0];
+                let total_num_branches = content[1];
+                let XYangles = content[2];
+                let YZangles = content[3];
+                let locations = content[4];
 
-        let model_trans_floor = Mat4.scale(500, 0.1, 500);
-        this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.floor : this.pure);
+                for(let i = 0; i < total_num_branches; i++) {
+                    if(i === 0) {
+                        let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
+                        .times(Mat4.scale(1, lengths[i], 1));
+                        this.shapes.trunk.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
+                    } else {
+                        let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                            .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                            .times(Mat4.rotation(XYangles[i], 0,0,1))
+                            .times(Mat4.scale(0.8, lengths[i], 0.8));
+                        this.shapes.branch.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
+                    }
+                }
+            }
+        }
     }
 
     display(context, program_state) {
@@ -302,14 +342,14 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(Mat4.look_at(
-                vec3(0, 12, 15),
-                vec3(0, 0, 0),
+                vec3(0, 35, 35),
+                vec3(0, 20, 0),
                 vec3(0, 1, 0)
             )); // Locate the camera here
         }
 
         // The position of the light
-        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(3, 6, 0, 1));
+        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(10, 30, 0, 1));
         // The color of the light
         this.light_color = color(1, 1, 1, 1);
 
@@ -318,7 +358,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.light_view_target = vec4(0, 0, 0, 1);
         this.light_field_of_view = 130 * Math.PI / 180; // 130 degree
 
-        program_state.lights = [new Light(this.light_position, this.light_color, 1000)];
+        program_state.lights = [new Light(this.light_position, this.light_color, 10000)];
 
         // Step 1: set the perspective and camera to the POV of light
         const light_view_mat = Mat4.look_at(
@@ -362,6 +402,129 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
     // }
 }
 
+function angle_generator(depth) {
+    let PI = Math.PI;
+    let lengths = [5];
+    let XYangles = [0];
+    let YZangles = [0];
+    let XY_prev_angles = [0];
+    let YZ_prev_angles = [0];
+    let num_branches = [];
+    let total_num_branches = 0;
+
+    for (let i = 0; i < depth; i++) {
+        num_branches.push(2 ** i);
+        total_num_branches = total_num_branches + (2 ** i);
+    }
+
+    for (let i = 1; i < depth; i++) {
+        let count = 0;
+        let temp_length = getRandomInt(2, 8-depth);
+        let temp_angle = PI/getRandomInt(3, 9);
+        let temp_angle2 = PI/getRandomInt(3, 9);
+        // let temp_angle2 = 0;
+
+
+        for (let j = 0; j < num_branches[i]; j++) {
+            lengths.push(temp_length);
+
+            if (j % 2 === 1) {
+                let tempXY = XY_prev_angles[0] + temp_angle;
+                XYangles.push(tempXY);
+                XY_prev_angles.push(tempXY);
+
+                let tempYZ = YZ_prev_angles[0] + temp_angle2;
+                YZangles.push(tempYZ);
+                YZ_prev_angles.push(tempYZ);
+
+                count += 1;
+            } else {
+                let tempXY = XY_prev_angles[0] - temp_angle;
+                XYangles.push(tempXY);
+                XY_prev_angles.push(tempXY);
+
+                let tempYZ = YZ_prev_angles[0] + temp_angle2;
+                YZangles.push(tempYZ);
+                YZ_prev_angles.push(tempYZ);
+
+                count += 1;
+            }
+
+            if (count === 2) {
+                count = 0;
+                XY_prev_angles.shift();
+                YZ_prev_angles.shift();
+            }
+        }
+    }
+    let return_array = [];
+    return_array.push(lengths);
+    return_array.push(total_num_branches);
+    return_array.push(XYangles);
+    return_array.push(YZangles);
+    return return_array;
+}
+
+function location_calc(angle_array) {
+    let lengths = angle_array[0];
+    let total_num_branches = angle_array[1];
+    let XYangles = angle_array[2];
+    let YZangles = angle_array[3];
+
+    let locations = [vec3(0,lengths[0],0)];
+    let endpoints = [vec3(0, 2*lengths[0], 0)];
+
+    let count = 0;
+    for (let i = 1; i < total_num_branches; i++) {
+
+        let angle1 = XYangles[i];
+        let angle2 = YZangles[i];
+        let temp_angle = .1;
+
+        let prev_x = endpoints[0][0];
+        let prev_y = endpoints[0][1];
+        let prev_z = endpoints[0][2];
+
+
+        let branch_y = lengths[i];
+
+        let temp_x = -branch_y  * Math.sin(angle1);
+        let temp_y = branch_y * Math.cos(angle1);
+
+        let new_x = temp_x * Math.cos(angle2);
+        let new_y = temp_y;
+        let new_z = -temp_x * Math.sin(angle2);
+
+        let end_y = 2 * lengths[i]
+
+        let temp_end_x = -end_y  * Math.sin(angle1);
+        let temp_end_y = end_y * Math.cos(angle1);
+
+        let new_end_x = temp_end_x * Math.cos(angle2);
+        let new_end_y = temp_end_y;
+        let new_end_z = -temp_end_x * Math.sin(angle2);
+
+        locations.push(vec3(prev_x + new_x, prev_y + new_y, prev_z + new_z));
+        endpoints.push(vec3(prev_x + new_end_x, prev_y + new_end_y, prev_z + new_end_z));
+
+
+        count++;
+
+        if(count == 2) {
+            endpoints.shift();
+            count = 0;
+        }
+    }
+
+    return locations;
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    return Math.floor(Math.random() * (max - min)) + min;
+}
 
 const Shadow_Textured_Phong =
     class Shadow_Textured_Phong extends defs.Phong_Shader {

@@ -13,6 +13,8 @@ let YZ_prev_angles = [0];
 let depth = getRandomInt(2, 7);
 let num_branches = [];
 let total_num_branches = 0;
+let x = getRandomInt(-25, 25);
+let z = getRandomInt(-25, 25);
 
 
 for (let i = 0; i < depth; i++) {
@@ -264,11 +266,11 @@ export class Tree2 extends Scene {
         this.shapes.plane.draw(context, program_state, plane_transform, this.materials.soil)
         for(let i = 0; i < total_num_branches; i++) {
             if(i === 0) {
-                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
+                let transform = identity.times(Mat4.translation(x, 0, z)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
                 .times(Mat4.scale(1, lengths[i], 1));
                 this.shapes.trunk.draw(context, program_state, transform, this.materials.test)
             } else {
-                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                let transform = identity.times(Mat4.translation(x, 0, z)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
                     .times(Mat4.rotation(YZangles[i], 0, 1, 0))
                     .times(Mat4.rotation(XYangles[i], 0,0,1))
                     .times(Mat4.scale(0.8, lengths[i], 0.8));
