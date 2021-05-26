@@ -106,7 +106,7 @@ export class Shape_From_File extends Shape {                                   /
 
 const LIGHT_DEPTH_TEX_SIZE = 2048;
 
-export const Square =
+const Square =
     class Square extends tiny.Vertex_Buffer {
         // **Minimal_Shape** an even more minimal triangle, with three
         // vertices each holding a 3D position and a color.
@@ -128,17 +128,18 @@ export const Square =
     }
 
 export class Shadow_Demo extends Scene {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
-    // Detailed model files can be used in place of simpler primitive-based
-    // shapes to add complexity to a scene.  Simpler primitives in your scene
-    // can just be thought of as placeholders until you find a model file
-    // that fits well.  This demo shows the teapot model twice, with one
-    // teapot showing off the Fake_Bump_Map effect while the other has a
-    // regular texture and Phong lighting.
+                                                                     // Detailed model files can be used in place of simpler primitive-based
+                                                                     // shapes to add complexity to a scene.  Simpler primitives in your scene
+                                                                     // can just be thought of as placeholders until you find a model file
+                                                                     // that fits well.  This demo shows the teapot model twice, with one
+                                                                     // teapot showing off the Fake_Bump_Map effect while the other has a
+                                                                     // regular texture and Phong lighting.
     constructor() {
         super();
         // Load the model file:
         this.shapes = {
             "teapot": new Shape_From_File("assets/teapot.obj"),
+            "trunk": new Shape_From_File("assets/tree_trunk.obj"),
             "sphere": new Subdivision_Sphere(6),
             "cube": new Cube(),
             "square_2d": new Square(),
@@ -275,30 +276,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         }
 
         for (let i of [-1, 1]) { // Spin the 3D model shapes as well.
-            const model_transform = Mat4.translation(2 * i, 3, 0)
-                .times(Mat4.rotation(t / 1000, -1, 2, 0))
-                .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0));
-            this.shapes.teapot.draw(context, program_state, model_transform, shadow_pass? this.stars : this.pure);
+            const model_transform = Mat4.translation(2 * i, 1, 0);
+            this.shapes.trunk.draw(context, program_state, model_transform, shadow_pass? this.stars : this.pure);
         }
 
-        let model_trans_floor = Mat4.scale(8, 0.1, 5);
-        let model_trans_ball_0 = Mat4.translation(0, 1, 0);
-        let model_trans_ball_1 = Mat4.translation(5, 1, 0);
-        let model_trans_ball_2 = Mat4.translation(-5, 1, 0);
-        let model_trans_ball_3 = Mat4.translation(0, 1, 3);
-        let model_trans_ball_4 = Mat4.translation(0, 1, -3);
-        let model_trans_wall_1 = Mat4.translation(-8, 2 - 0.1, 0).times(Mat4.scale(0.33, 2, 5));
-        let model_trans_wall_2 = Mat4.translation(+8, 2 - 0.1, 0).times(Mat4.scale(0.33, 2, 5));
-        let model_trans_wall_3 = Mat4.translation(0, 2 - 0.1, -5).times(Mat4.scale(8, 2, 0.33));
+        let model_trans_floor = Mat4.scale(500, 0.1, 500);
         this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.floor : this.pure);
-        this.shapes.cube.draw(context, program_state, model_trans_wall_1, shadow_pass? this.floor : this.pure);
-        this.shapes.cube.draw(context, program_state, model_trans_wall_2, shadow_pass? this.floor : this.pure);
-        this.shapes.cube.draw(context, program_state, model_trans_wall_3, shadow_pass? this.floor : this.pure);
-        this.shapes.sphere.draw(context, program_state, model_trans_ball_0, shadow_pass? this.floor : this.pure);
-        this.shapes.sphere.draw(context, program_state, model_trans_ball_1, shadow_pass? this.floor : this.pure);
-        this.shapes.sphere.draw(context, program_state, model_trans_ball_2, shadow_pass? this.floor : this.pure);
-        this.shapes.sphere.draw(context, program_state, model_trans_ball_3, shadow_pass? this.floor : this.pure);
-        this.shapes.sphere.draw(context, program_state, model_trans_ball_4, shadow_pass? this.floor : this.pure);
     }
 
     display(context, program_state) {
@@ -319,8 +302,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(Mat4.look_at(
-                vec3(0, 12, 12),
-                vec3(0, 2, 0),
+                vec3(0, 12, 15),
+                vec3(0, 0, 0),
                 vec3(0, 1, 0)
             )); // Locate the camera here
         }
@@ -328,12 +311,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         // The position of the light
         this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(3, 6, 0, 1));
         // The color of the light
-        this.light_color = color(
-            0.667 + Math.sin(t/500) / 3,
-            0.667 + Math.sin(t/1500) / 3,
-            0.667 + Math.sin(t/3500) / 3,
-            1
-        );
+        this.light_color = color(1, 1, 1, 1);
 
         // This is a rough target of the light.
         // Although the light is point light, we need a target to set the POV of the light
@@ -346,7 +324,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         const light_view_mat = Mat4.look_at(
             vec3(this.light_position[0], this.light_position[1], this.light_position[2]),
             vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
-            vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
+        vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
         );
         const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 0.5, 500);
         // Bind the Depth Texture Buffer
@@ -371,7 +349,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         // Step 3: display the textures
         this.shapes.square_2d.draw(context, program_state,
             Mat4.translation(-.99, .08, 0).times(
-                Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
+            Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
             ),
             this.depth_tex.override({texture: this.lightDepthTexture})
         );
@@ -385,7 +363,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
 }
 
 
-export const Shadow_Textured_Phong =
+const Shadow_Textured_Phong =
     class Shadow_Textured_Phong extends defs.Phong_Shader {
         shared_glsl_code() {
             // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
@@ -592,7 +570,7 @@ export const Shadow_Textured_Phong =
 
 
 
-export const Color_Phong_Shader =
+const Color_Phong_Shader =
     class Color_Phong_Shader extends defs.Phong_Shader {
         vertex_glsl_code() {
             // ********* VERTEX SHADER *********
@@ -678,7 +656,7 @@ export const Color_Phong_Shader =
     }
 
 
-export const Depth_Texture_Shader_2D =
+const Depth_Texture_Shader_2D =
     class Depth_Texture_Shader extends Phong_Shader {
         // **Textured_Phong** is a Phong Shader extended to addditionally decal a
         // texture image over the drawn shape, lined up according to the texture
@@ -738,7 +716,7 @@ export const Depth_Texture_Shader_2D =
         }
     }
 
-export const Buffered_Texture  =
+const Buffered_Texture  =
     class Buffered_Texture extends tiny.Graphics_Card_Object {
         // **Texture** wraps a pointer to a new texture image where
         // it is stored in GPU memory, along with a new HTML image object.

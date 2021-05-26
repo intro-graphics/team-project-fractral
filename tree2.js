@@ -1,7 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
 let PI = Math.PI;
@@ -47,6 +47,107 @@ for (let i = 1; i < depth; i++) {
         }
     }
 }
+
+export class Shape_From_File extends Shape {                                   // **Shape_From_File** is a versatile standalone Shape that imports
+                                                                               // all its arrays' data from an .obj 3D model file.
+    constructor(filename) {
+        super("position", "normal", "texture_coord");
+        // Begin downloading the mesh. Once that completes, return
+        // control to our parse_into_mesh function.
+        this.load_file(filename);
+    }
+
+    load_file(filename) {                             // Request the external file and wait for it to load.
+        // Failure mode:  Loads an empty shape.
+        return fetch(filename)
+            .then(response => {
+                if (response.ok) return Promise.resolve(response.text())
+                else return Promise.reject(response.status)
+            })
+            .then(obj_file_contents => this.parse_into_mesh(obj_file_contents))
+            .catch(error => {
+                this.copy_onto_graphics_card(this.gl);
+            })
+    }
+
+    parse_into_mesh(data) {                           // Adapted from the "webgl-obj-loader.js" library found online:
+        var verts = [], vertNormals = [], textures = [], unpacked = {};
+
+        unpacked.verts = [];
+        unpacked.norms = [];
+        unpacked.textures = [];
+        unpacked.hashindices = {};
+        unpacked.indices = [];
+        unpacked.index = 0;
+
+        var lines = data.split('\n');
+
+        var VERTEX_RE = /^v\s/;
+        var NORMAL_RE = /^vn\s/;
+        var TEXTURE_RE = /^vt\s/;
+        var FACE_RE = /^f\s/;
+        var WHITESPACE_RE = /\s+/;
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            var elements = line.split(WHITESPACE_RE);
+            elements.shift();
+
+            if (VERTEX_RE.test(line)) verts.push.apply(verts, elements);
+            else if (NORMAL_RE.test(line)) vertNormals.push.apply(vertNormals, elements);
+            else if (TEXTURE_RE.test(line)) textures.push.apply(textures, elements);
+            else if (FACE_RE.test(line)) {
+                var quad = false;
+                for (var j = 0, eleLen = elements.length; j < eleLen; j++) {
+                    if (j === 3 && !quad) {
+                        j = 2;
+                        quad = true;
+                    }
+                    if (elements[j] in unpacked.hashindices)
+                        unpacked.indices.push(unpacked.hashindices[elements[j]]);
+                    else {
+                        var vertex = elements[j].split('/');
+
+                        unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 0]);
+                        unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 1]);
+                        unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 2]);
+
+                        if (textures.length) {
+                            unpacked.textures.push(+textures[((vertex[1] - 1) || vertex[0]) * 2 + 0]);
+                            unpacked.textures.push(+textures[((vertex[1] - 1) || vertex[0]) * 2 + 1]);
+                        }
+
+                        unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 0]);
+                        unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 1]);
+                        unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 2]);
+
+                        unpacked.hashindices[elements[j]] = unpacked.index;
+                        unpacked.indices.push(unpacked.index);
+                        unpacked.index += 1;
+                    }
+                    if (j === 3 && quad) unpacked.indices.push(unpacked.hashindices[elements[0]]);
+                }
+            }
+        }
+        {
+            const {verts, norms, textures} = unpacked;
+            for (var j = 0; j < verts.length / 3; j++) {
+                this.arrays.position.push(vec3(verts[3 * j], verts[3 * j + 1], verts[3 * j + 2]));
+                this.arrays.normal.push(vec3(norms[3 * j], norms[3 * j + 1], norms[3 * j + 2]));
+                this.arrays.texture_coord.push(vec(textures[2 * j], textures[2 * j + 1]));
+            }
+            this.indices = unpacked.indices;
+        }
+        this.normalize_positions(false);
+        this.ready = true;
+    }
+
+    draw(context, program_state, model_transform, material) {               // draw(): Same as always for shapes, but cancel all
+        // attempts to draw the shape before it loads:
+        if (this.ready)
+            super.draw(context, program_state, model_transform, material);
+    }
+}
 //
 // for (let i = 1; i < total_num_branches; i++) {
 //
@@ -85,6 +186,8 @@ export class Tree2 extends Scene {
         this.shapes = {
             cube: new defs.Cube(),
             plane: new defs.Square(),
+            trunk: new Shape_From_File("assets/tree_trunk.obj"),
+            branch: new Shape_From_File("assets/tree_branch.obj")
         };
 
 
@@ -94,6 +197,8 @@ export class Tree2 extends Scene {
 
             soil: new Material(new defs.Phong_Shader(),
                 {ambient: 1, diffusivity: 0, color: hex_color("#836539")}),
+            oak: new Material(new defs.Fake_Bump_Map(1),
+                {ambient: 1.0, texture: new Texture("assets/oak_bark.png")}),
         };
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 60), vec3(0, 10, 0), vec3(0, 1, 0));
@@ -154,13 +259,18 @@ export class Tree2 extends Scene {
         //     }
         //     endpoints.shift();
         // }
-
-
+        let plane_transform = identity.times(Mat4.scale(500, 500, 500)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.shapes.plane.draw(context, program_state, plane_transform, this.materials.soil)
         for(let i = 0; i < total_num_branches; i++) {
-            let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
+            if(i === 0) {
+                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
                 .times(Mat4.scale(1, lengths[i], 1));
-
-            this.shapes.cube.draw(context, program_state, transform, this.materials.test)
+                this.shapes.trunk.draw(context, program_state, transform, this.materials.oak)
+            } else {
+                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
+                .times(Mat4.scale(0.8, lengths[i], 0.8));
+                this.shapes.branch.draw(context, program_state, transform, this.materials.oak)
+            }
         }
     }
 }
