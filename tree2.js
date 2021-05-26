@@ -11,7 +11,7 @@ let YZangles = [0];
 let XY_prev_angles = [0];
 let YZ_prev_angles = [0];
 let depth = getRandomInt(2, 7);
-let count = 0;
+// let depth = 3;
 let num_branches = [];
 let total_num_branches = 0;
 
@@ -25,6 +25,7 @@ for (let i = 1; i < depth; i++) {
     let count = 0;
     let temp_length = getRandomInt(2, 8-depth);
     let temp_angle = PI/getRandomInt(3, 9);
+    let temp_angle2 = PI/getRandomInt(3, 9);
 
     for (let j = 0; j < num_branches[i]; j++) {
         lengths.push(temp_length);
@@ -33,17 +34,28 @@ for (let i = 1; i < depth; i++) {
             let tempXY = XY_prev_angles[0] + temp_angle;
             XYangles.push(tempXY);
             XY_prev_angles.push(tempXY);
+
+            let tempYZ = YZ_prev_angles[0] + temp_angle2;
+            YZangles.push(tempYZ);
+            YZ_prev_angles.push(tempYZ);
+
             count += 1;
         } else {
             let tempXY = XY_prev_angles[0] - temp_angle;
             XYangles.push(tempXY);
             XY_prev_angles.push(tempXY);
+
+            let tempYZ = YZ_prev_angles[0] + temp_angle2;
+            YZangles.push(tempYZ);
+            YZ_prev_angles.push(tempYZ);
+
             count += 1;
         }
 
         if (count === 2) {
             count = 0;
             XY_prev_angles.shift();
+            YZ_prev_angles.shift();
         }
     }
 }
@@ -148,36 +160,6 @@ export class Shape_From_File extends Shape {                                   /
             super.draw(context, program_state, model_transform, material);
     }
 }
-//
-// for (let i = 1; i < total_num_branches; i++) {
-//
-//     let tempXY = PI/getRandomInt(3, 9);
-//     // let tempYZ = PI/getRandomInt(3, 9);
-//     if(i % 2 === 1) {
-//         tempXY = XY_prev_angles[0] + tempXY;
-//         XYangles.push(tempXY);
-//         XY_prev_angles.push(tempXY);
-//         // let tempYZ = YZ_prev_angles[0] + PI/getRandomInt(4,9);
-//         // YZangles.push(tempYZ);
-//         // YZ_prev_angles.push(tempYZ);
-//         count += 1;
-//     } else {
-//         tempXY = XY_prev_angles[0] - tempXY;
-//         XYangles.push(tempXY);
-//         XY_prev_angles.push(tempXY);
-//         // let tempYZ = YZ_prev_angles[0] - tempYZ;
-//         // YZangles.push(tempYZ);
-//         // YZ_prev_angles.push(tempYZ);
-//         count += 1;
-//     }
-//     if (count == 2) {
-//         count = 0;
-//         XY_prev_angles.shift();
-//         // YZ_prev_angles.shift();
-//     }
-// }
-
-
 export class Tree2 extends Scene {
     constructor() {
         // Constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
@@ -234,12 +216,36 @@ export class Tree2 extends Scene {
 
         let count = 0;
         for (let i = 1; i < total_num_branches; i++) {
-            locations.push(vec3(endpoints[0][0] - lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + lengths[i] * Math.cos(XYangles[i]),0))
-            endpoints.push(vec3(endpoints[0][0] - 2*lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + 2*lengths[i] * Math.cos(XYangles[i]),0))
 
-            // let length = Math.sqrt(lengths[i]);
-            // locations.push(vec3(endpoints[0][0] - length * Math.sin(XYangles[i]) + length * Math.cos(YZangles[i]), endpoints[0][1] + length * Math.cos(XYangles[i]), endpoints[0][2]-length * Math.sin(YZangles[i])))
-            // endpoints.push(vec3(endpoints[0][0] - 2*length * Math.sin(XYangles[i]) + 2*length * Math.cos(YZangles[i]), endpoints[0][1] + 2*length * Math.cos(XYangles[i]), endpoints[0][2]-2*length * Math.sin(YZangles[i])))
+            let angle1 = XYangles[i];
+            let angle2 = YZangles[i];
+
+            let prev_x = endpoints[0][0];
+            let prev_y = endpoints[0][1];
+            let prev_z = endpoints[0][2];
+
+            let curr_x = 0;
+            let curr_y = lengths[i];
+            let curr_z = 0;
+
+            let new_x = -curr_y * Math.sin(angle1);
+            let new_y = curr_y * Math.cos(angle1);
+            let new_z = 0;
+
+            let end_x = 0;
+            let end_y = 2 * lengths[i]
+            let end_z = 0;
+
+            let new_end_x = - end_y * Math.sin(angle1);
+            let new_end_y = end_y * Math.cos(angle1);
+            let new_end_z = end_z;
+
+            // locations.push(vec3(endpoints[0][0] - lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + lengths[i] * Math.cos(XYangles[i]),0))
+            // endpoints.push(vec3(endpoints[0][0] - 2*lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + 2*lengths[i] * Math.cos(XYangles[i]),0))
+
+            locations.push(vec3(prev_x + new_x, prev_y + new_y, prev_z + new_z));
+            endpoints.push(vec3(prev_x + new_end_x, prev_y + new_end_y, prev_z + new_end_z));
+
 
             count++;
 
@@ -249,27 +255,17 @@ export class Tree2 extends Scene {
             }
         }
 
-
-        // let iter = 1;
-        // for (let i = 0; i < depth;  i++) {
-        //     for(let j = 0; j < 1; j++) {
-        //         locations.push(vec3(endpoints[0][0] - lengths[iter]*Math.sin(angles[iter]), endpoints[0][1] + lengths[iter] * Math.cos(angles[iter]),0))
-        //         endpoints.push(vec3(2 * locations[iter][0], 2 * locations[iter][1], locations[iter][2]))
-        //         iter++;
-        //     }
-        //     endpoints.shift();
-        // }
         let plane_transform = identity.times(Mat4.scale(500, 500, 500)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.plane.draw(context, program_state, plane_transform, this.materials.soil)
         for(let i = 0; i < total_num_branches; i++) {
             if(i === 0) {
                 let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
                 .times(Mat4.scale(1, lengths[i], 1));
-                this.shapes.trunk.draw(context, program_state, transform, this.materials.oak)
+                this.shapes.trunk.draw(context, program_state, transform, this.materials.test)
             } else {
                 let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
                 .times(Mat4.scale(0.8, lengths[i], 0.8));
-                this.shapes.branch.draw(context, program_state, transform, this.materials.oak)
+                this.shapes.branch.draw(context, program_state, transform, this.materials.test)
             }
         }
     }
