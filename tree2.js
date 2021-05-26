@@ -11,7 +11,6 @@ let YZangles = [0];
 let XY_prev_angles = [0];
 let YZ_prev_angles = [0];
 let depth = getRandomInt(2, 7);
-// let depth = 3;
 let num_branches = [];
 let total_num_branches = 0;
 
@@ -26,6 +25,8 @@ for (let i = 1; i < depth; i++) {
     let temp_length = getRandomInt(2, 8-depth);
     let temp_angle = PI/getRandomInt(3, 9);
     let temp_angle2 = PI/getRandomInt(3, 9);
+    // let temp_angle2 = 0;
+
 
     for (let j = 0; j < num_branches[i]; j++) {
         lengths.push(temp_length);
@@ -219,26 +220,30 @@ export class Tree2 extends Scene {
 
             let angle1 = XYangles[i];
             let angle2 = YZangles[i];
+            let temp_angle = .1;
 
             let prev_x = endpoints[0][0];
             let prev_y = endpoints[0][1];
             let prev_z = endpoints[0][2];
 
-            let curr_x = 0;
-            let curr_y = lengths[i];
-            let curr_z = 0;
 
-            let new_x = -curr_y * Math.sin(angle1);
-            let new_y = curr_y * Math.cos(angle1);
-            let new_z = 0;
+            let branch_y = lengths[i];
 
-            let end_x = 0;
+            let temp_x = -branch_y  * Math.sin(angle1);
+            let temp_y = branch_y * Math.cos(angle1);
+
+            let new_x = temp_x * Math.cos(angle2);
+            let new_y = temp_y;
+            let new_z = -temp_x * Math.sin(angle2);
+
             let end_y = 2 * lengths[i]
-            let end_z = 0;
 
-            let new_end_x = - end_y * Math.sin(angle1);
-            let new_end_y = end_y * Math.cos(angle1);
-            let new_end_z = end_z;
+            let temp_end_x = -end_y  * Math.sin(angle1);
+            let temp_end_y = end_y * Math.cos(angle1);
+
+            let new_end_x = temp_end_x * Math.cos(angle2);
+            let new_end_y = temp_end_y;
+            let new_end_z = -temp_end_x * Math.sin(angle2);
 
             // locations.push(vec3(endpoints[0][0] - lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + lengths[i] * Math.cos(XYangles[i]),0))
             // endpoints.push(vec3(endpoints[0][0] - 2*lengths[i] * Math.sin(XYangles[i]), endpoints[0][1] + 2*lengths[i] * Math.cos(XYangles[i]),0))
@@ -263,8 +268,10 @@ export class Tree2 extends Scene {
                 .times(Mat4.scale(1, lengths[i], 1));
                 this.shapes.trunk.draw(context, program_state, transform, this.materials.test)
             } else {
-                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
-                .times(Mat4.scale(0.8, lengths[i], 0.8));
+                let transform = identity.times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                    .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                    .times(Mat4.rotation(XYangles[i], 0,0,1))
+                    .times(Mat4.scale(0.8, lengths[i], 0.8));
                 this.shapes.branch.draw(context, program_state, transform, this.materials.test)
             }
         }
