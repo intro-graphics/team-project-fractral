@@ -133,12 +133,12 @@ const Square =
     }
 
 export class Shadow_Demo extends Scene {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
-                                                                     // Detailed model files can be used in place of simpler primitive-based
-                                                                     // shapes to add complexity to a scene.  Simpler primitives in your scene
-                                                                     // can just be thought of as placeholders until you find a model file
-                                                                     // that fits well.  This demo shows the teapot model twice, with one
-                                                                     // teapot showing off the Fake_Bump_Map effect while the other has a
-                                                                     // regular texture and Phong lighting.
+    // Detailed model files can be used in place of simpler primitive-based
+    // shapes to add complexity to a scene.  Simpler primitives in your scene
+    // can just be thought of as placeholders until you find a model file
+    // that fits well.  This demo shows the teapot model twice, with one
+    // teapot showing off the Fake_Bump_Map effect while the other has a
+    // regular texture and Phong lighting.
     constructor() {
         super();
         // Load the model file:
@@ -146,7 +146,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             "teapot": new Shape_From_File("assets/teapot.obj"),
             "trunk": new Shape_From_File("assets/tree_trunk.obj"),
             "branch": new Shape_From_File("assets/tree_branch.obj"),
+            "cabin": new Shape_From_File("assets/cabin.obj"),
+            "rock": new Shape_From_File("assets/rock.obj"),
+            "moonGround": new Shape_From_File("assets/moon.obj"),
+            //"whiteGround": new Shape_From_File("assets/white.obj"),
             "sphere": new Subdivision_Sphere(6),
+            "sphere4": new defs.Subdivision_Sphere(4),
             "cube": new Cube(),
             "square_2d": new Square(),
         };
@@ -176,40 +181,48 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             color_texture: null,
             light_depth_texture: null
         })
+        this.cabin = new Material(new Shadow_Textured_Phong(1), {
+            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
+            color_texture: new Texture("assets/cabinTex.png"), light_depth_texture: null})
+        this.rock = new Material(new Shadow_Textured_Phong(1), {
+            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
+            color_texture: new Texture("assets/rockTex.png"), light_depth_texture: null})
+        this.sun = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 0.3, texture: new Texture("assets/sunTex.png")})
         // For the floor
         this.pure = new Material(new Color_Phong_Shader(), {
         })
         // For light source
-        this.light_src = new Material(new Phong_Shader(), {
+        this.light_src = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 0.5, texture: new Texture("assets/sunTex.png")})
+        /*this.light_src = new Material(new Phong_Shader(), {
             color: color(1, 1, 1, 1), ambient: 1, diffusivity: 0, specularity: 0
-        });
+        });*/
         // For depth texture display
         this.depth_tex =  new Material(new Depth_Texture_Shader_2D(), {
             color: color(0, 0, .0, 1),
             ambient: 1, diffusivity: 0, specularity: 0, texture: null
         });
+        // For Background
+        this.whiteTop = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 1.0, texture: new Texture("assets/whiteTop.png")})
+        this.whiteGround = new Material(new Shadow_Textured_Phong(1), {
+            color: hex_color("#ffffff"), ambient: 0.7, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
+            color_texture: null,
+            light_depth_texture: null
+        })
+        this.moonGround = new Material(new Shadow_Textured_Phong(1), {
+            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
+            color_texture: new Texture("assets/moonTex.png"), light_depth_texture: null})
+        this.spaceBG = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
 
         this.init_ok = false;
     }
 
     make_control_panel() {
-        // make_control_panel(): Sets up a panel of interactive HTML elements, including
-        // buttons with key bindings for affecting this scene, and live info readouts.
-        this.control_panel.innerHTML += "Dragonfly rotation angle: ";
-        // The next line adds a live text readout of a data member of our Scene.
-        this.live_string(box => {
-            box.textContent = (this.hover ? 0 : (this.t % (2 * Math.PI)).toFixed(2)) + " radians"
-        });
-        this.new_line();
-        this.new_line();
-        // Add buttons so the user can actively toggle data members of our Scene:
-        this.key_triggered_button("Hover dragonfly in place", ["h"], function () {
-            this.hover ^= 1;
-        });
-        this.new_line();
-        this.key_triggered_button("Swarm mode", ["m"], function () {
-            this.swarm ^= 1;
-        });
+        this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
+        this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
     }
 
     texture_buffer_init(gl) {
@@ -281,17 +294,51 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         let light_position = this.light_position;
         let light_color = this.light_color;
         const t = program_state.animation_time;
+        let model_trans_floor = Mat4.scale(100, 0.1, 100);
+        let whiteTransform = Mat4.identity()
+            .times(Mat4.translation(0, -20, 0))
+            .times(Mat4.scale(200, 0.1, 200));
+        let moonTransform = Mat4.identity()
+            .times(Mat4.translation(0, 0, 0))
+            .times(Mat4.rotation(Math.PI / 2, -1, 0, 0))
+            .times(Mat4.scale(100, 100, 100));
+        let whiteBGTransform = Mat4.identity()
+            .times(Mat4.scale(200, 200, 200));
+        let spaceBGTransform = Mat4.identity()
+            .times(Mat4.scale(100, 100, 100));
+
 
         program_state.draw_shadow = draw_shadow;
 
         if (draw_light_source && shadow_pass) {
             this.shapes.sphere.draw(context, program_state,
-                Mat4.translation(light_position[0], light_position[1], light_position[2]).times(Mat4.scale(.5,.5,.5)),
+                Mat4.translation(light_position[0], light_position[1], light_position[2]).times(Mat4.scale(3,3,3)),
                 this.light_src.override({color: light_color}));
         }
+        // Base BG
+        if (this.attached === undefined) {
+            this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
+        }
+        // White & Space BG
+        if (this.attached !== undefined) {
+            let envirmnt = this.attached();
+            if (envirmnt == "white") {
+                this.shapes.cube.draw(context, program_state, whiteTransform, shadow_pass? this.whiteGround : this.pure);
+                this.shapes.sphere4.draw(context, program_state, whiteBGTransform, this.whiteTop);
+            }
+            else if (envirmnt == "space") {
+                this.shapes.moonGround.draw(context, program_state, moonTransform, shadow_pass? this.moonGround : this.pure);
+                this.shapes.sphere4.draw(context, program_state, spaceBGTransform, this.spaceBG);
+            }
+        }
 
-        let model_trans_floor = Mat4.scale(100, 0.1, 100);
-        this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
+        let cabinTransform = Mat4.identity().times(Mat4.translation(20, 9, -10)).times(Mat4.scale(10, 10, 10));
+        let rockTransform = Mat4.identity().times(Mat4.translation(-20, 5, -10)).times(Mat4.scale(5, 5, 5));
+        this.shapes.cabin.draw(context, program_state, cabinTransform, shadow_pass? this.cabin : this.pure);
+        this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
+
+
+
         if(flag) {
             let result = angle_generator(4);
             let result_location = location_calc(result);
@@ -310,7 +357,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 for(let i = 0; i < total_num_branches; i++) {
                     if(i === 0) {
                         let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
-                        .times(Mat4.scale(1, lengths[i], 1));
+                            .times(Mat4.scale(1, lengths[i], 1));
                         this.shapes.trunk.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
                     } else {
                         let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
@@ -358,13 +405,13 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.light_view_target = vec4(0, 0, 0, 1);
         this.light_field_of_view = 130 * Math.PI / 180; // 130 degree
 
-        program_state.lights = [new Light(this.light_position, this.light_color, 10000)];
+        program_state.lights = [new Light(this.light_position, this.light_color, 100000000)];
 
         // Step 1: set the perspective and camera to the POV of light
         const light_view_mat = Mat4.look_at(
             vec3(this.light_position[0], this.light_position[1], this.light_position[2]),
             vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
-        vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
+            vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
         );
         const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 0.5, 500);
         // Bind the Depth Texture Buffer
@@ -387,12 +434,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.render_scene(context, program_state, true,true, true);
 
         // Step 3: display the textures
-        this.shapes.square_2d.draw(context, program_state,
+        /*this.shapes.square_2d.draw(context, program_state,
             Mat4.translation(-.99, .08, 0).times(
             Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
             ),
             this.depth_tex.override({texture: this.lightDepthTexture})
-        );
+        );*/
     }
 
     // show_explanation(document_element) {
