@@ -7,6 +7,7 @@ let tree_array = [];
 let flag = 1;
 let x2 = getRandomInt(-20, 20);
 let z2 = getRandomInt(-20, 20);
+let k = -1;
 
 export class Shape_From_File extends Shape {                                   // **Shape_From_File** is a versatile standalone Shape that imports
                                                                                // all its arrays' data from an .obj 3D model file.
@@ -290,13 +291,16 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
 
-    render_scene(context, program_state, shadow_pass, draw_light_source=false, draw_shadow=false) {
+     render_scene(context, program_state, shadow_pass, draw_light_source=false, draw_shadow=false) {
         let light_position = this.light_position;
         let light_color = this.light_color;
         const t = program_state.animation_time;
-        let model_trans_floor = Mat4.scale(100, 0.1, 100);
+
+        let model_trans_floor = Mat4.identity()
+            .times(Mat4.translation(0, 0, 0))
+            .times(Mat4.scale(100, 0.1, 100));
         let whiteTransform = Mat4.identity()
-            .times(Mat4.translation(0, -20, 0))
+            .times(Mat4.translation(0, 1, 0))
             .times(Mat4.scale(200, 0.1, 200));
         let moonTransform = Mat4.identity()
             .times(Mat4.translation(0, 0, 0))
@@ -338,14 +342,14 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
 
 
-
         if(flag) {
             let result = angle_generator(4);
             let result_location = location_calc(result);
             result.push(result_location);
             tree_array.push(result);
             flag = 0;
-        } else {
+        }
+        else {
             for(let x = 0; x < tree_array.length; x++) {
                 let content = tree_array[x];
                 let lengths = content[0];
@@ -354,7 +358,31 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 let YZangles = content[3];
                 let locations = content[4];
 
-                for(let i = 0; i < total_num_branches; i++) {
+                if ((t % 200) > 0 && (t % 200) < 200) {
+                    if (k == total_num_branches) {
+                        k = -1;
+                        break;
+                    }
+                    for (let i = -1; i <= k; i++) {
+                        if (i == 0) {
+                            let transform1 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                .times(Mat4.scale(1, lengths[0], 1));
+                            this.shapes.trunk.draw(context, program_state, transform1, shadow_pass ? this.oak : this.pure);
+                        } else if (i > 0) {
+                            let transform2 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                                .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                                .times(Mat4.rotation(XYangles[i], 0, 0, 1))
+                                .times(Mat4.scale(0.8, lengths[i], 0.8));
+                            this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                        }
+                    }
+                    if ((t % 200) > 0 && (t % 200) < 15) {
+                        k++;
+                        continue;
+                    }
+                }
+
+                /*for(let i = 0; i < total_num_branches; i++) {
                     if(i === 0) {
                         let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
                             .times(Mat4.scale(1, lengths[i], 1));
@@ -366,7 +394,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                             .times(Mat4.scale(0.8, lengths[i], 0.8));
                         this.shapes.branch.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
                     }
-                }
+                }*/
             }
         }
     }
@@ -424,7 +452,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         program_state.light_tex_mat = light_proj_mat;
         program_state.view_mat = light_view_mat;
         program_state.projection_transform = light_proj_mat;
-        this.render_scene(context, program_state, false,false, false);
+        this.render_scene(context, program_state, false,false, false); // Drawing shadow
 
         // Step 2: unbind, draw to the canvas
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
