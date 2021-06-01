@@ -25,8 +25,16 @@ export class Test extends Scene {
 
         this.initial_camera_location = Mat4.look_at(vec3(-30, 5, -30), vec3(30, 0, 30), vec3(0, 1, 0));
         this.animation_queue = [];
+		this.set_position();
     }
 
+	set_position() {
+		this.rand1 = [];
+		this.rand2 = [];
+		this.rand1.push(Math.random()*50 - 25);
+		this.rand2.push(Math.random()*50 - 25);
+	}
+	
     make_control_panel() {
 
     }
@@ -61,7 +69,7 @@ export class Test extends Scene {
             to: pos_world_far,
             mid: pos_world_mid,
             start_time: program_state.animation_time,
-            end_time: program_state.animation_time + 5000,
+            end_time: program_state.animation_time + 15000,
             more_info: "add gravity"
         }
 
@@ -86,6 +94,7 @@ export class Test extends Scene {
             canvas.addEventListener("mousedown", e => {
                 e.preventDefault();
                 this.my_mouse_down(e, mouse_position(e), context, program_state);
+				this.set_position()
             });
         }
 
@@ -97,14 +106,13 @@ export class Test extends Scene {
 
         const t = program_state.animation_time, dt = program_state.animation_delta_time / 1000;
 
-
         let origin = Mat4.identity();
         origin = origin.times(Mat4.translation(0, 0, 0))
             .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
             .times(Mat4.scale(30, 30, 30));
 
         this.shapes.plane.draw(context, program_state, origin, this.materials.soil);
-
+		
 
         if (this.animation_queue.length > 0) {
             for (let i = 0; i < this.animation_queue.length; i++) {
@@ -116,22 +124,27 @@ export class Test extends Scene {
                 let mid = animation_bullet.mid;
                 let start_time = animation_bullet.start_time;
                 let end_time = animation_bullet.end_time;
-
+				
                 if (t <= end_time && t >= start_time) {
                     let animation_process = (t - start_time) / (end_time - start_time);
                     let position = to.times(animation_process).plus(from.times(1 - animation_process));
 
-                    if (animation_bullet.more_info === "add gravity") {
-                        position[1] -= 0.5 * 9.8 * ((t - start_time) / 1000) ** 2;
-                    }
+                    //if (animation_bullet.more_info === "add gravity") {
+                    //    position[1] -= 0.5 * 9.8 * ((t - start_time) / 1000) ** 2;
+                    //}
 
-                    let tree_test = Mat4.translation(to[0], to[1], to[2]);
-                    this.shapes.cube.draw(context, program_state, tree_test, this.materials.test);
+                    //let tree_test = Mat4.identity();
+					//tree_test = Mat4.translation(to[0], to[1], to[2]);
+                    //this.shapes.cube.draw(context, program_state, tree_test, this.materials.test);
 
-                    let model_trans = Mat4.translation(position[0], position[1], position[2])
-                        .times(Mat4.rotation(animation_process * 50, .3, .6, .2))
+                    //let model_trans = ((Mat4.identity()).times(Mat4.translation(position[0], position[1], position[2])))
+                    //    .times(Mat4.rotation(animation_process * 50, .3, .6, .2))
+					
+					let t_int = Math.floor(t);
+					let model_trans = (Mat4.identity()).times(Mat4.translation(this.rand1[t_int % this.rand1.length], 0, this.rand2[t_int % this.rand2.length])).times(Mat4.translation(0, 1, 0));
 
-                    this.shapes.cube.draw(context, program_state, model_trans, this.materials.test);
+                    //this.shapes.cube.draw(context, program_state, origin.times(Mat4.scale(0.03, 0.03, 0.03)), this.materials.test);
+					this.shapes.cube.draw(context, program_state, model_trans, this.materials.test);
                 }
             }
         }
