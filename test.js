@@ -113,8 +113,9 @@ export class Test extends Scene {
 
         this.shapes.plane.draw(context, program_state, origin, this.materials.soil);
 		
-
+        console.log("here");
         if (this.animation_queue.length > 0) {
+            console.log(this.animation_queue.length);
             for (let i = 0; i < this.animation_queue.length; i++) {
                 let animation_bullet = this.animation_queue[i];
 

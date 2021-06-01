@@ -4,9 +4,8 @@ const {vec3, vec4, vec, color, Matrix, Mat4, Light, Shape, Material, Shader, Tex
 const {Cube, Axis_Arrows, Textured_Phong, Phong_Shader, Basic_Shader, Subdivision_Sphere} = defs
 
 let tree_array = [];
-let flag = 1;
-let x2 = getRandomInt(-20, 20);
-let z2 = getRandomInt(-20, 20);
+let flag = 0;
+let flag_test = 0;
 let k = -1;
 
 export class Shape_From_File extends Shape {                                   // **Shape_From_File** is a versatile standalone Shape that imports
@@ -341,11 +340,17 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.shapes.cabin.draw(context, program_state, cabinTransform, shadow_pass? this.cabin : this.pure);
         this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
 
-
         if(flag) {
-            let result = angle_generator(4);
+            let depth_gen = getRandomInt(2, 7);
+            let result = angle_generator(depth_gen);
             let result_location = location_calc(result);
+            let temp_x = getRandomInt_avoidObjects(-20, 20, 1);
+            let temp_z = getRandomInt_avoidObjects(-40, 5, 0);
+            let drawn = 0;
             result.push(result_location);
+            result.push(temp_x);
+            result.push(temp_z);
+            result.push(drawn);
             tree_array.push(result);
             flag = 0;
         }
@@ -357,46 +362,56 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 let XYangles = content[2];
                 let YZangles = content[3];
                 let locations = content[4];
+                let x2 = content[5];
+                let z2 = content[6];
+                let drawn = content[7];
 
-                if ((t % 200) > 0 && (t % 200) < 200) {
-                    if (k == total_num_branches) {
-                        k = -1;
-                        break;
-                    }
-                    for (let i = -1; i <= k; i++) {
-                        if (i == 0) {
-                            let transform1 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
-                                .times(Mat4.scale(1, lengths[0], 1));
-                            this.shapes.trunk.draw(context, program_state, transform1, shadow_pass ? this.oak : this.pure);
-                        } else if (i > 0) {
-                            let transform2 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
-                                .times(Mat4.rotation(YZangles[i], 0, 1, 0))
-                                .times(Mat4.rotation(XYangles[i], 0, 0, 1))
-                                .times(Mat4.scale(0.8, lengths[i], 0.8));
-                            this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                if(!drawn) {
+                    if ((t % 200) > 0 && (t % 200) < 200) {
+                        if (k == total_num_branches) {
+                            k = -1;
+                            tree_array[x][7] = 1;
+                            break;
+                        }
+                        for (let i = -1; i <= k; i++) {
+                            if (i == 0) {
+                                let transform1 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                    .times(Mat4.scale(1, lengths[0], 1));
+                                this.shapes.trunk.draw(context, program_state, transform1, shadow_pass ? this.oak : this.pure);
+                            } else if (i > 0) {
+                                let transform2 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                                    .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                                    .times(Mat4.rotation(XYangles[i], 0, 0, 1))
+                                    .times(Mat4.scale(0.8, lengths[i], 0.8));
+                                this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                            }
+                        }
+                        if ((t % 200) > 0 && (t % 200) < 15) {
+                            k++;
+                            continue;
                         }
                     }
-                    if ((t % 200) > 0 && (t % 200) < 15) {
-                        k++;
-                        continue;
+                } else {
+                    for(let i = 0; i < total_num_branches; i++) {
+                        if(i === 0) {
+                            let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
+                            .times(Mat4.scale(1, lengths[i], 1));
+                            this.shapes.trunk.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
+                        } else {
+                            let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                                .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                                .times(Mat4.rotation(XYangles[i], 0,0,1))
+                                .times(Mat4.scale(0.8, lengths[i], 0.8));
+                            this.shapes.branch.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
+                        }
                     }
                 }
-
-                /*for(let i = 0; i < total_num_branches; i++) {
-                    if(i === 0) {
-                        let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2])).times(Mat4.rotation(XYangles[i], 0,0,1))
-                            .times(Mat4.scale(1, lengths[i], 1));
-                        this.shapes.trunk.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
-                    } else {
-                        let transform = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
-                            .times(Mat4.rotation(YZangles[i], 0, 1, 0))
-                            .times(Mat4.rotation(XYangles[i], 0,0,1))
-                            .times(Mat4.scale(0.8, lengths[i], 0.8));
-                        this.shapes.branch.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
-                    }
-                }*/
             }
         }
+    }
+
+    my_mouse_click(e) {
+        flag = 1;
     }
 
     display(context, program_state) {
@@ -421,6 +436,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 vec3(0, 20, 0),
                 vec3(0, 1, 0)
             )); // Locate the camera here
+
+            let canvas = context.canvas;
+            canvas.addEventListener("mousedown", e => {
+                e.preventDefault();
+                this.my_mouse_click(e);
+            });
         }
 
         // The position of the light
@@ -599,6 +620,25 @@ function getRandomInt(min, max) {
     max = Math.floor(max);
 
     return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function getRandomInt_avoidObjects(min, max, flag) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    if(flag) {
+        let res = Math.floor(Math.random() * (max - min)) + min;
+        while((res >= 10 && res <= 30) || (res >= -15 && res <= -25)) {
+            res = Math.floor(Math.random() * (max - min)) + min;
+        }
+        return res;
+    } else {
+        let res = Math.floor(Math.random() * (max - min)) + min;
+        while((res >= -20 && res <= 0) || (res >= -5 && res <= -15)) {
+            res = Math.floor(Math.random() * (max - min)) + min;
+        }
+        return res; 
+    }
 }
 
 const Shadow_Textured_Phong =
