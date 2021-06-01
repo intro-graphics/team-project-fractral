@@ -8,6 +8,9 @@ let flag = 1;
 let x2 = getRandomInt(-20, 20);
 let z2 = getRandomInt(-20, 20);
 let k = -1;
+let growFlag = true;
+let startFlag = false;
+let flagBranchGrow = [];
 
 export class Shape_From_File extends Shape {                                   // **Shape_From_File** is a versatile standalone Shape that imports
                                                                                // all its arrays' data from an .obj 3D model file.
@@ -182,15 +185,13 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             color_texture: null,
             light_depth_texture: null
         })
+        // For objects
         this.cabin = new Material(new Shadow_Textured_Phong(1), {
             color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
             color_texture: new Texture("assets/cabinTex.png"), light_depth_texture: null})
         this.rock = new Material(new Shadow_Textured_Phong(1), {
             color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
             color_texture: new Texture("assets/rockTex.png"), light_depth_texture: null})
-        this.sun = new Material(new defs.Fake_Bump_Map(1), {
-            ambient: 0.3, texture: new Texture("assets/sunTex.png")})
-        // For the floor
         this.pure = new Material(new Color_Phong_Shader(), {
         })
         // For light source
@@ -217,6 +218,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             color_texture: new Texture("assets/moonTex.png"), light_depth_texture: null})
         this.spaceBG = new Material(new defs.Fake_Bump_Map(1), {
             ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
+
 
         this.init_ok = false;
     }
@@ -348,6 +350,11 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             result.push(result_location);
             tree_array.push(result);
             flag = 0;
+
+
+            for (let i = 0; i < 14; i++) {
+                flagBranchGrow.push(false);
+            }
         }
         else {
             for(let x = 0; x < tree_array.length; x++) {
@@ -358,29 +365,104 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 let YZangles = content[3];
                 let locations = content[4];
 
-                if ((t % 200) > 0 && (t % 200) < 200) {
+
+
+
+                if ((t % 5000) > 0 && (t % 5000) < 10)
+                    startFlag = true;
+
+
+                if (startFlag && (t % 5000) > 0 && (t % 5000) < 5000) {
                     if (k == total_num_branches) {
+
+
+                        growFlag = true;
+
+                        for (let i = 0; i < 14; i++) {
+                            flagBranchGrow[i] = false;
+                        }
+
+
                         k = -1;
-                        break;
+                        //break;
                     }
-                    for (let i = -1; i <= k; i++) {
+                    for (let i = -1; i < k; i++) {
                         if (i == 0) {
-                            let transform1 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
-                                .times(Mat4.scale(1, lengths[0], 1));
-                            this.shapes.trunk.draw(context, program_state, transform1, shadow_pass ? this.oak : this.pure);
-                        } else if (i > 0) {
-                            let transform2 = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
-                                .times(Mat4.rotation(YZangles[i], 0, 1, 0))
-                                .times(Mat4.rotation(XYangles[i], 0, 0, 1))
-                                .times(Mat4.scale(0.8, lengths[i], 0.8));
-                            this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                            if ((t % 5000) >= 0 && (t % 5000) < 1000) {
+                                let transformGrow = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                    .times(Mat4.scale(1, lengths[0] * ((t % 1000) / 1000), 1))
+                                    .times(Mat4.translation(0, (lengths[0] / 2) * ((t % 1000) / 1000), 0))
+                                    .times(Mat4.translation(0, -(lengths[0] / 2), 0));
+
+
+                                this.shapes.trunk.draw(context, program_state, transformGrow, shadow_pass ? this.oak : this.pure);
+                            }
+                            /*else if ((t % 2000) > 500 && (t % 500) < 2000) {
+                                let transformMaxGrow = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                    .times(Mat4.scale(1, lengths[0], 1));
+                                this.shapes.trunk.draw(context, program_state, transformMaxGrow, shadow_pass ? this.oak : this.pure);
+                            }*/
+
+                            growFlag = false;
+                        }
+                        else if (!growFlag && i > 0) {
+
+                            if ((t % 5000) >= 1000 && (t % 5000) < 5000) {
+
+                                let transformMaxGrow = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                    .times(Mat4.scale(1, lengths[0], 1));
+                                this.shapes.trunk.draw(context, program_state, transformMaxGrow, shadow_pass ? this.oak : this.pure);
+
+                                let transformGrow = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                                    .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                                    .times(Mat4.rotation(XYangles[i], 0, 0, 1))
+                                    .times(Mat4.scale(0.8 * ((t % (4000 / 14)) / (4000 / 14)), lengths[i] * ((t % (4000 / 14)) / (4000 / 14)), 0.8 * ((t % (4000 / 14)) / (4000 / 14))))
+                                    .times(Mat4.translation(0, (lengths[i] / 2) * ((t % (4000 / 14)) / (4000 / 14)), 0))
+                                    .times(Mat4.translation(0, -(lengths[i] / 2), 0));
+
+
+
+                                let transformMaxBranch = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[i][0], locations[i][1], locations[i][2]))
+                                    .times(Mat4.rotation(YZangles[i], 0, 1, 0))
+                                    .times(Mat4.rotation(XYangles[i], 0, 0, 1))
+                                    .times(Mat4.scale(0.8, lengths[i], 0.8));
+
+                                if ((t % 5000) >= 1000 + (4000 / 14) * (i - 1) && (t % 5000) < 1000 + (4000 / 14) * i) {
+                                    this.shapes.branch.draw(context, program_state, transformGrow, shadow_pass ? this.oak : this.pure);
+                                    flagBranchGrow[i] = true;
+                                }
+                                else {
+                                    if (flagBranchGrow[i])
+                                        this.shapes.branch.draw(context, program_state, transformMaxBranch, shadow_pass ? this.oak : this.pure);
+                                }
+
+                                /*let transformMaxGrow = Mat4.identity().times(Mat4.translation(x2, 0, z2)).times(Mat4.translation(locations[0][0], locations[0][1], locations[0][2])).times(Mat4.rotation(XYangles[0], 0, 0, 1))
+                                    .times(Mat4.scale(1, lengths[0], 1));
+                                this.shapes.trunk.draw(context, program_state, transformMaxGrow, shadow_pass ? this.oak : this.pure);*/
+
+
+
+                                /*if ((t % 5000) >= 1000 + (4000 / 15) * i && (t % 5000) < 5000)
+                                    this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                                else {*/
+                                //this.shapes.branch.draw(context, program_state, transformMaxBranch, shadow_pass ? this.oak : this.pure);
+                                //}
+
+
+                                if (k == total_num_branches && i == k - 1) {
+                                    growFlag = true;
+                                    startFlag = false;
+                                    break;
+                                }
+                            }
                         }
                     }
-                    if ((t % 200) > 0 && (t % 200) < 15) {
+                    if ((t % (4000 / 14)) > 0 && (t % (4000 / 14)) < 15 && (t % 5000) >= 1000) {
                         k++;
-                        continue;
+                        //continue;
                     }
                 }
+                //}
 
                 /*for(let i = 0; i < total_num_branches; i++) {
                     if(i === 0) {

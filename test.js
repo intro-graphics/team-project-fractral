@@ -145,7 +145,3 @@ export class Test extends Scene {
         }
     }
 }
-
-
-
-
