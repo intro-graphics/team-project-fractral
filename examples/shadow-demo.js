@@ -268,6 +268,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.key_triggered_button("Silver Color", ["Control", "l"], () => this.attachedColor = () => "silver");
         this.key_triggered_button("Jade Color", ["Control", "j"], () => this.attachedColor = () => "jade");
         this.key_triggered_button("Ruby Color", ["Control", "r"], () => this.attachedColor = () => "ruby");
+
+        this.key_triggered_button("Clear Trees", ["Control", "t"], () => this.clearFlag = 1);
     }
 
     texture_buffer_init(gl) {
@@ -385,7 +387,53 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.shapes.cabin.draw(context, program_state, cabinTransform, shadow_pass? this.cabin : this.pure);
         // this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
 
+        let pickedMaterial = this.materials.ruby;
+        if (this.attachedColor) {
+            if (this.attachedColor() == "jade") { // color------------------------------------------------------------------------------------
+                pickedMaterial = this.materials.jade;
+            } else if (this.attachedColor() == "silver") {
+                pickedMaterial = this.materials.silver;
+            } else if (this.attachedColor() == "gold") {
+                pickedMaterial = this.materials.gold;
+            } else if (this.attachedColor() == "ruby") {
+                pickedMaterial = this.materials.ruby;
+            } else if (this.attachedColor === undefined) {
+                pickedMaterial = this.materials.ruby;
+            }
+        }
 
+        var Flevel;
+        var width = 5;
+        let loc_transform = Mat4.identity();
+        if (this.attachedLevel === undefined) {
+            Flevel = 0;
+        } else {
+            Flevel = this.attachedLevel();
+        }
+
+        var boxes = [];
+        var b = new Box(-20, 5, -10, width);
+        boxes.push(b);
+
+        if (Flevel !== 0) {
+            for (var i = 0; i < Flevel; i++) {
+                var next = [];
+                for (var j = 0; j < boxes.length; j++) {
+                    var b = boxes[j];
+                    var new_boxes = b.generate();
+                    next = next.concat(new_boxes);
+                }
+                boxes = next;
+            }
+        }
+        for (var i = 0; i < boxes.length; i++) {
+            this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+        }
+
+        if (this.clearFlag) {
+            tree_array = [];
+            this.clearFlag = 0;
+        }
         if(flag) {
             let depth_gen = getRandomInt(2, 7);
             let result = angle_generator(depth_gen);
@@ -527,65 +575,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         program_state.view_mat = program_state.camera_inverse;
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 0.5, 500);
         this.render_scene(context, program_state, true,true, true);
-
-        let pickedMaterial = this.materials.ruby;
-        if (this.attachedColor) {
-            if (this.attachedColor() == "jade") { // color------------------------------------------------------------------------------------
-                pickedMaterial = this.materials.jade;
-            } else if (this.attachedColor() == "silver") {
-                pickedMaterial = this.materials.silver;
-            } else if (this.attachedColor() == "gold") {
-                pickedMaterial = this.materials.gold;
-            } else if (this.attachedColor() == "ruby") {
-                pickedMaterial = this.materials.ruby;
-            } else if (this.attachedColor === undefined) {
-                pickedMaterial = this.materials.ruby;
-            }
-        }
-
-        var Flevel;
-        var width = 5;
-        let loc_transform = Mat4.identity();
-        if (this.attachedLevel === undefined) {
-            Flevel = 0;
-        } else {
-            Flevel = this.attachedLevel();
-        }
-
-
-        var boxes = [];
-        var b = new Box(-20, 5, -10, width);
-        boxes.push(b);
-
-        if (Flevel !== 0) {
-            for (var i = 0; i < Flevel; i++) {
-                var next = [];
-                for (var j = 0; j < boxes.length; j++) {
-                    var b = boxes[j];
-                    var new_boxes = b.generate();
-                    next = next.concat(new_boxes);
-                }
-                boxes = next;
-            }
-        }
-        for (var i = 0; i < boxes.length; i++) {
-            this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
-        }
-
-        // Step 3: display the textures
-        /*this.shapes.square_2d.draw(context, program_state,
-            Mat4.translation(-.99, .08, 0).times(
-            Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
-            ),
-            this.depth_tex.override({texture: this.lightDepthTexture})
-        );*/
     }
-
-    // show_explanation(document_element) {
-    //     document_element.innerHTML += "<p>This demo loads an external 3D model file of a teapot.  It uses a condensed version of the \"webgl-obj-loader.js\" "
-    //         + "open source library, though this version is not guaranteed to be complete and may not handle some .OBJ files.  It is contained in the class \"Shape_From_File\". "
-    //         + "</p><p>One of these teapots is lit with bump mapping.  Can you tell which one?</p>";
-    // }
 }
 
 function angle_generator(depth) {
