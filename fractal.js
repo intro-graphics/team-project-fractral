@@ -187,7 +187,7 @@ export class Fractal extends Scene {
             grassTop: new Material(new defs.Fake_Bump_Map(1),
                 {ambient: 1.0, texture: new Texture("assets/grassBG.png")}),
             grassGround: new Material(new defs.Fake_Bump_Map(1),
-                {ambient: 1.0, texture: new Texture("assets/grassTex.png")}),
+                {ambient: 0.7, texture: new Texture("assets/grassText.png")}),
             tree_texture: new Material(new defs.Phong_Shader(), {ambient: 0.5, diffusivity: 0.5, color: hex_color("#8B4513")}),
         };
 
@@ -237,7 +237,7 @@ export class Fractal extends Scene {
 
         let flatTransform = Mat4.identity()
             .times(Mat4.translation(0, -100, 0))
-            .times(Mat4.scale(500, 0, 500));
+            .times(Mat4.scale(500, 0.1, 500));
 
 
 

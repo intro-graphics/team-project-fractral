@@ -342,20 +342,21 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         let light_color = this.light_color;
         const t = program_state.animation_time;
 
-        let model_trans_floor = Mat4.identity()
-            .times(Mat4.translation(0, 0, 0))
-            .times(Mat4.scale(100, 0.1, 100));
-        let whiteTransform = Mat4.identity()
-            .times(Mat4.translation(0, 1, 0))
-            .times(Mat4.scale(200, 0.1, 200));
-        let moonTransform = Mat4.identity()
-            .times(Mat4.translation(0, 0, 0))
-            .times(Mat4.rotation(Math.PI / 2, -1, 0, 0))
-            .times(Mat4.scale(100, 100, 100));
-        let whiteBGTransform = Mat4.identity()
-            .times(Mat4.scale(200, 200, 200));
-        let spaceBGTransform = Mat4.identity()
-            .times(Mat4.scale(100, 100, 100));
+         let model_trans_floor = Mat4.identity()
+             .times(Mat4.translation(0, 0, 0))
+             .times(Mat4.scale(100, 0.1, 100));
+         let whiteTransform = Mat4.identity()
+             .times(Mat4.translation(0, 1, 0))
+             .times(Mat4.scale(300, 0.1, 300));
+         let moonTransform = Mat4.identity()
+             .times(Mat4.rotation(Math.PI, 0, 1, 0))
+             .times(Mat4.translation(73, 8, 20))
+             .times(Mat4.rotation(Math.PI / 2, -1, 0, 0))
+             .times(Mat4.scale(300, 300, 300));
+         let whiteBGTransform = Mat4.identity()
+             .times(Mat4.scale(300, 300, 300));
+         let spaceBGTransform = Mat4.identity()
+             .times(Mat4.scale(300, 300, 300));
 
 
         program_state.draw_shadow = draw_shadow;
@@ -539,7 +540,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         }
 
         // The position of the light
-        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(10, 30, 0, 1));
+        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(30, 55, 0, 1));
         // The color of the light
         this.light_color = color(1, 1, 1, 1);
 
@@ -556,7 +557,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
             vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
         );
-        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 0.5, 500);
+        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 10, 500);
         // Bind the Depth Texture Buffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
         gl.viewport(0, 0, this.lightDepthTextureSize, this.lightDepthTextureSize);
