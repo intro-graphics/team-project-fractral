@@ -218,37 +218,45 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
 
         this.materials = {
-            gold: new Material(new defs.Textured_Reflected_Phong(),
+            gold: new Material(new Shadow_Textured_Phong(1),
                 {
+                    color: hex_color("#D4AF37"),
                     ambient: 0.17375,
                     diffusivity: 0.5282,
                     specularity: 0.516716,
                     smoothness: 51.2,
-                    color: hex_color("#D4AF37")
+                    color_texture: null,
+                    light_depth_texture: null
                 }),
-            silver: new Material(new defs.Textured_Reflected_Phong(),
+            silver: new Material(new Shadow_Textured_Phong(1),
                 {
+                    color: hex_color("#C0C0C0"),
                     ambient: 0.19225,
                     diffusivity: 0.50754,
                     specularity: 0.508273,
                     smoothness: 51.2,
-                    color: hex_color("#C0C0C0")
+                    color_texture: null,
+                    light_depth_texture: null
                 }),
-            jade: new Material(new defs.Textured_Reflected_Phong(),
+            jade: new Material(new Shadow_Textured_Phong(1),
                 {
+                    color: hex_color("#00A86B"),
                     ambient: 0.17166,
                     diffusivity: 0.68666,
                     specularity: 0.316228,
                     smoothness: 12.8,
-                    color: hex_color("#00A86B")
+                    color_texture: null,
+                    light_depth_texture: null
                 }),
-            ruby: new Material(new defs.Textured_Reflected_Phong(),
+            ruby: new Material(new Shadow_Textured_Phong(1),
                 {
+                    color: hex_color("#E0115F"),
                     ambient: 0.066,
                     diffusivity: 0.23232,
                     specularity: 0.660576,
                     smoothness: 76.8,
-                    color: hex_color("#E0115F")
+                    color_texture: null,
+                    light_depth_texture: null
                 }),
         };
 
@@ -386,7 +394,6 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         let cabinTransform = Mat4.identity().times(Mat4.translation(20, 9, -10)).times(Mat4.scale(10, 10, 10));
         let rockTransform = Mat4.identity().times(Mat4.translation(-20, 5, -10)).times(Mat4.scale(5, 5, 5));
         this.shapes.cabin.draw(context, program_state, cabinTransform, shadow_pass? this.cabin : this.pure);
-        // this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
 
         let pickedMaterial = this.materials.ruby;
         if (this.attachedColor) {
@@ -428,7 +435,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             }
         }
         for (var i = 0; i < boxes.length; i++) {
-            this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+            this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), shadow_pass? pickedMaterial : this.pure);
         }
 
         if (this.clearFlag) {
