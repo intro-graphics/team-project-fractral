@@ -196,11 +196,11 @@ export class Fractal extends Scene {
     }
 
     make_control_panel() {
-        this.key_triggered_button("Level 0", ["Control", "0"], () => this.attachedLevel = () => 0);
-        this.key_triggered_button("Level 1", ["Control", "1"], () => this.attachedLevel = () => 1);
-        this.key_triggered_button("Level 2", ["Control", "2"], () => this.attachedLevel = () => 2);
-        this.key_triggered_button("Level 3", ["Control", "3"], () => this.attachedLevel = () => 3);
-        this.key_triggered_button("Level 4", ["Control", "4"], () => this.attachedLevel = () => 4);
+        this.key_triggered_button("Flevel 0", ["Control", "0"], () => this.attachedFlevel = () => 0);
+        this.key_triggered_button("Level 1", ["Control", "1"], () => this.attachedFlevel = () => 1);
+        this.key_triggered_button("Level 2", ["Control", "2"], () => this.attachedFlevel = () => 2);
+        this.key_triggered_button("Level 3", ["Control", "3"], () => this.attachedFlevel = () => 3);
+        this.key_triggered_button("Level 4", ["Control", "4"], () => this.attachedFlevel = () => 4);
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("Earth environment", ["Control", "e"], () => this.attached = () => "earth");
         this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
@@ -279,13 +279,13 @@ export class Fractal extends Scene {
                 }
             }
 
-            var level;
+            var Flevel;
             var width = 10;
             let loc_transform = Mat4.identity();
-            if (this.attachedLevel === undefined) {
-                level = 0;
+            if (this.attachedFlevel === undefined) {
+                Flevel = 0;
             } else {
-                level = this.attachedLevel();
+                Flevel = this.attachedFlevel();
             }
 
             if (this.attachedShpe) {
@@ -295,8 +295,8 @@ export class Fractal extends Scene {
                     var b = new Box(0, 0, 0, width);
                     boxes.push(b);
 
-                    if (level !== 0) {
-                        for (var i = 0; i < level; i++) {
+                    if (Flevel !== 0) {
+                        for (var i = 0; i < Flevel; i++) {
                             var next = [];
                             for (var j = 0; j < boxes.length; j++) {
                                 var b = boxes[j];
@@ -312,11 +312,11 @@ export class Fractal extends Scene {
                 } else if (this.attachedShpe() == 101) { // pyramid----------------------------------------------------------------------------------------
                     var pyramids = [];
 
-                    var p = new Fractal_pyramid(0, 0, 0, width, level);
+                    var p = new Fractal_pyramid(0, 0, 0, width, Flevel);
                     pyramids.push(p);
 
-                    if (level !== 0) {
-                        for (var i = 0; i < level; i++) {
+                    if (Flevel !== 0) {
+                        for (var i = 0; i < Flevel; i++) {
                             var next = [];
                             for (var j = 0; j < pyramids.length; j++) {
                                 var b = pyramids[j];
@@ -336,8 +336,8 @@ export class Fractal extends Scene {
                 var b = new Box(0, 0, 0, width);
                 boxes.push(b);
 
-                if (level !== 0) {
-                    for (var i = 0; i < level; i++) {
+                if (Flevel !== 0) {
+                    for (var i = 0; i < Flevel; i++) {
                         var next = [];
                         for (var j = 0; j < boxes.length; j++) {
                             var b = boxes[j];
@@ -384,7 +384,7 @@ function Box(x, y, z, r) {
     };
 }
 
-function Fractal_pyramid(x, y, z, width, level) {
+function Fractal_pyramid(x, y, z, width, Flevel) {
     this.pos = vec3(x, y, z);
     this.w = width;
 
@@ -401,10 +401,10 @@ function Fractal_pyramid(x, y, z, width, level) {
                         continue;
                     }
                     if(l === 1) {
-                        let b = new Fractal_pyramid(this.pos[0], this.pos[1]-width/2 + l * height, this.pos[2], new_width, level);
+                        let b = new Fractal_pyramid(this.pos[0], this.pos[1]-width/2 + l * height, this.pos[2], new_width, Flevel);
                         pyramids.push(b);
                     } else {
-                        let b = new Fractal_pyramid(this.pos[0] + x * new_width, this.pos[1]-width/2 + l * height, this.pos[2] + z * new_width, new_width, level);
+                        let b = new Fractal_pyramid(this.pos[0] + x * new_width, this.pos[1]-width/2 + l * height, this.pos[2] + z * new_width, new_width, Flevel);
                         pyramids.push(b);
                     }
                 }

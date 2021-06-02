@@ -152,7 +152,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             //"whiteGround": new Shape_From_File("assets/white.obj"),
             "sphere": new Subdivision_Sphere(6),
             "sphere4": new defs.Subdivision_Sphere(4),
-            "cube": new Cube(),
+            "cube": new defs.Cube(),
             "square_2d": new Square(),
         };
 
@@ -217,12 +217,57 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         this.spaceBG = new Material(new defs.Fake_Bump_Map(1), {
             ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
 
+        this.materials = {
+            gold: new Material(new defs.Textured_Reflected_Phong(),
+                {
+                    ambient: 0.17375,
+                    diffusivity: 0.5282,
+                    specularity: 0.516716,
+                    smoothness: 51.2,
+                    color: hex_color("#D4AF37")
+                }),
+            silver: new Material(new defs.Textured_Reflected_Phong(),
+                {
+                    ambient: 0.19225,
+                    diffusivity: 0.50754,
+                    specularity: 0.508273,
+                    smoothness: 51.2,
+                    color: hex_color("#C0C0C0")
+                }),
+            jade: new Material(new defs.Textured_Reflected_Phong(),
+                {
+                    ambient: 0.17166,
+                    diffusivity: 0.68666,
+                    specularity: 0.316228,
+                    smoothness: 12.8,
+                    color: hex_color("#00A86B")
+                }),
+            ruby: new Material(new defs.Textured_Reflected_Phong(),
+                {
+                    ambient: 0.066,
+                    diffusivity: 0.23232,
+                    specularity: 0.660576,
+                    smoothness: 76.8,
+                    color: hex_color("#E0115F")
+                }),
+        };
+
         this.init_ok = false;
     }
 
     make_control_panel() {
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
+
+        this.key_triggered_button("Level 0", ["Control", "0"], () => this.attachedLevel = () => 0);
+        this.key_triggered_button("Level 1", ["Control", "1"], () => this.attachedLevel = () => 1);
+        this.key_triggered_button("Level 2", ["Control", "2"], () => this.attachedLevel = () => 2);
+        this.key_triggered_button("Level 3", ["Control", "3"], () => this.attachedLevel = () => 3);
+
+        this.key_triggered_button("Gold Color", ["Control", "g"], () => this.attachedColor = () => "gold");
+        this.key_triggered_button("Silver Color", ["Control", "l"], () => this.attachedColor = () => "silver");
+        this.key_triggered_button("Jade Color", ["Control", "j"], () => this.attachedColor = () => "jade");
+        this.key_triggered_button("Ruby Color", ["Control", "r"], () => this.attachedColor = () => "ruby");
     }
 
     texture_buffer_init(gl) {
@@ -338,7 +383,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         let cabinTransform = Mat4.identity().times(Mat4.translation(20, 9, -10)).times(Mat4.scale(10, 10, 10));
         let rockTransform = Mat4.identity().times(Mat4.translation(-20, 5, -10)).times(Mat4.scale(5, 5, 5));
         this.shapes.cabin.draw(context, program_state, cabinTransform, shadow_pass? this.cabin : this.pure);
-        this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
+        // this.shapes.rock.draw(context, program_state, rockTransform, shadow_pass? this.rock : this.pure);
+
 
         if(flag) {
             let depth_gen = getRandomInt(2, 7);
@@ -481,6 +527,50 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         program_state.view_mat = program_state.camera_inverse;
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 0.5, 500);
         this.render_scene(context, program_state, true,true, true);
+
+        let pickedMaterial = this.materials.ruby;
+        if (this.attachedColor) {
+            if (this.attachedColor() == "jade") { // color------------------------------------------------------------------------------------
+                pickedMaterial = this.materials.jade;
+            } else if (this.attachedColor() == "silver") {
+                pickedMaterial = this.materials.silver;
+            } else if (this.attachedColor() == "gold") {
+                pickedMaterial = this.materials.gold;
+            } else if (this.attachedColor() == "ruby") {
+                pickedMaterial = this.materials.ruby;
+            } else if (this.attachedColor === undefined) {
+                pickedMaterial = this.materials.ruby;
+            }
+        }
+
+        var Flevel;
+        var width = 5;
+        let loc_transform = Mat4.identity();
+        if (this.attachedLevel === undefined) {
+            Flevel = 0;
+        } else {
+            Flevel = this.attachedLevel();
+        }
+
+
+        var boxes = [];
+        var b = new Box(-20, 5, -10, width);
+        boxes.push(b);
+
+        if (Flevel !== 0) {
+            for (var i = 0; i < Flevel; i++) {
+                var next = [];
+                for (var j = 0; j < boxes.length; j++) {
+                    var b = boxes[j];
+                    var new_boxes = b.generate();
+                    next = next.concat(new_boxes);
+                }
+                boxes = next;
+            }
+        }
+        for (var i = 0; i < boxes.length; i++) {
+            this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
+        }
 
         // Step 3: display the textures
         /*this.shapes.square_2d.draw(context, program_state,
@@ -1052,3 +1142,26 @@ const Buffered_Texture  =
             context.bindTexture(context.TEXTURE_2D, this.texture_buffer_pointer);
         }
     }
+
+function Box(x, y, z, r) {
+    this.pos = vec3(x, y, z);
+    this.r = r;
+
+    this.generate = function() {
+        let boxes = [];
+        for (let x = -1; x < 2; x++) {
+            for (let y = -1; y < 2; y++) {
+                for (let z = -1; z < 2; z++) {
+                    let sum = Math.abs(x) + Math.abs(y) + Math.abs(z);
+                    let newR = r / 3;
+
+                    if (sum > 1) {
+                        let b = new Box(this.pos[0] + x * newR*2, this.pos[1] + y * newR*2, this.pos[2] + z * newR*2, newR);
+                        boxes.push(b)
+                    }
+                }
+            }
+        }
+        return boxes;
+    };
+}
