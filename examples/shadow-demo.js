@@ -264,6 +264,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
     }
 
     make_control_panel() {
+        this.key_triggered_button("BrownBase environment", ["Control", "b"], () => this.attached = () => "brown");
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
 
@@ -388,6 +389,9 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             else if (envirmnt == "space") {
                 this.shapes.moonGround.draw(context, program_state, moonTransform, shadow_pass? this.moonGround : this.pure);
                 this.shapes.sphere4.draw(context, program_state, spaceBGTransform, this.spaceBG);
+            }
+            else if (envirmnt == "brown") {
+                this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
             }
         }
 
