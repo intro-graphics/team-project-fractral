@@ -352,13 +352,13 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
 
          let model_trans_floor = Mat4.identity()
              .times(Mat4.translation(0, 0, 0))
-             .times(Mat4.scale(100, 0.1, 100));
+             .times(Mat4.scale(100, 0.1,100));
          let whiteTransform = Mat4.identity()
              .times(Mat4.translation(0, 1, 0))
              .times(Mat4.scale(300, 0.1, 300));
          let moonTransform = Mat4.identity()
-             .times(Mat4.rotation(Math.PI, 0, 1, 0))
-             .times(Mat4.translation(73, 8, 20))
+             .times(Mat4.rotation(Math.PI * (1 / 2), 0, 1, 0))
+             .times(Mat4.translation(222, 20, 10))
              .times(Mat4.rotation(Math.PI / 2, -1, 0, 0))
              .times(Mat4.scale(300, 300, 300));
          let whiteBGTransform = Mat4.identity()
