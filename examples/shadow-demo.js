@@ -180,7 +180,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             light_depth_texture: null
         })
         this.soil = new Material(new Shadow_Textured_Phong(1), {
-            color: hex_color("#836539"), ambient: .4, diffusivity: 0.5, specularity: 0.4, smoothness: 64,
+            color: hex_color("#836539"), ambient: .4, diffusivity: 0.5, specularity: 0.0, smoothness: 64,
+            color_texture: null,
+            light_depth_texture: null
+        })
+        this.moonSurface = new Material(new Shadow_Textured_Phong(1), {
+            color: hex_color("#b5b9b7"), ambient: .4, diffusivity: 0.5, specularity: 0.0, smoothness: 64,
             color_texture: null,
             light_depth_texture: null
         })
@@ -219,14 +224,9 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             color_texture: null,
             light_depth_texture: null
         })
-        this.moonGround = new Material(new Shadow_Textured_Phong(1), {
-            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
-            color_texture: new Texture("assets/moonTex.png"), light_depth_texture: null})
         this.spaceBG = new Material(new defs.Fake_Bump_Map(1), {
             ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
-        this.dessertGround = new Material(new Shadow_Textured_Phong(1), {
-            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
-            color_texture: new Texture("assets/dessertTex.png"), light_depth_texture: null})
+
 
         this.materials = {
             gold: new Material(new Shadow_Textured_Phong(1),
@@ -403,7 +403,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 this.shapes.sphere4.draw(context, program_state, whiteBGTransform, this.whiteTop);
             }
             else if (envirmnt == "space") {
-                this.shapes.moonGround.draw(context, program_state, moonTransform, shadow_pass? this.moonGround : this.pure);
+                this.shapes.moonGround.draw(context, program_state, moonTransform, shadow_pass? this.moonSurface : this.pure);
                 this.shapes.sphere4.draw(context, program_state, spaceBGTransform, this.spaceBG);
             }
             else if (envirmnt == "dessert") {
