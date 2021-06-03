@@ -144,6 +144,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         // Load the model file:
         this.bgm = new Audio();
         this.bgm.src = 'assets/Spring_edited.m4a';
+        this.bgm.volume = 0.3;
 
         this.tree_sound = new Audio();
         this.tree_sound.src = 'assets/tree_grow.m4a';
