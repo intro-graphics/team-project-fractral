@@ -142,6 +142,12 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
     constructor() {
         super();
         // Load the model file:
+        this.bgm = new Audio();
+        this.bgm.src = 'assets/Spring_edited.m4a';
+
+        this.tree_sound = new Audio();
+        this.tree_sound.src = 'assets/tree_grow.m4a';
+
         this.shapes = {
             "teapot": new Shape_From_File("assets/teapot.obj"),
             "trunk": new Shape_From_File("assets/tree_trunk.obj"),
@@ -490,6 +496,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                                     .times(Mat4.rotation(XYangles[i], 0, 0, 1))
                                     .times(Mat4.scale(0.8, lengths[i], 0.8));
                                 this.shapes.branch.draw(context, program_state, transform2, shadow_pass ? this.oak : this.pure);
+                                this.bgm.play();
                             }
                         }
                         if ((t % 200) > 0 && (t % 200) < 15) {
@@ -509,6 +516,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                                 .times(Mat4.rotation(XYangles[i], 0,0,1))
                                 .times(Mat4.scale(0.8, lengths[i], 0.8));
                             this.shapes.branch.draw(context, program_state, transform, shadow_pass? this.oak : this.pure);
+                            this.bgm.play();
                         }
                     }
                 }
@@ -518,6 +526,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
 
     my_mouse_click(e) {
         flag = 1;
+        this.tree_sound.play();
     }
 
     display(context, program_state) {

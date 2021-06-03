@@ -142,6 +142,8 @@ export class Fractal extends Scene {
             branch: new Shape_From_File("assets/tree_branch.obj")
         };
 
+        this.bgm = new Audio();
+        this.bgm.src = 'assets/space.m4a';
 
         this.materials = {
             gold: new Material(new defs.Textured_Reflected_Phong(),
@@ -196,7 +198,7 @@ export class Fractal extends Scene {
     }
 
     make_control_panel() {
-        this.key_triggered_button("Flevel 0", ["Control", "0"], () => this.attachedFlevel = () => 0);
+        this.key_triggered_button("Level 0", ["Control", "0"], () => this.attachedFlevel = () => 0);
         this.key_triggered_button("Level 1", ["Control", "1"], () => this.attachedFlevel = () => 1);
         this.key_triggered_button("Level 2", ["Control", "2"], () => this.attachedFlevel = () => 2);
         this.key_triggered_button("Level 3", ["Control", "3"], () => this.attachedFlevel = () => 3);
@@ -217,6 +219,7 @@ export class Fractal extends Scene {
     }
 
     display(context, program_state) {
+        this.bgm.play();
         // display(): Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
 
@@ -312,7 +315,7 @@ export class Fractal extends Scene {
                 } else if (this.attachedShpe() == 101) { // pyramid----------------------------------------------------------------------------------------
                     var pyramids = [];
 
-                    var p = new Fractal_pyramid(0, 0, 0, width, Flevel);
+                    var p = new Fractal_pyramid(0, 0, 0, width * 2, Flevel);
                     pyramids.push(p);
 
                     if (Flevel !== 0) {
@@ -328,7 +331,7 @@ export class Fractal extends Scene {
                     }
 
                     for (var i = 0; i < pyramids.length; i++) {
-                        this.shapes.pyramid.draw(context, program_state, loc_transform.times(Mat4.translation(pyramids[i].pos[0], pyramids[i].pos[1], pyramids[i].pos[2])).times(Mat4.scale(pyramids[i].w, pyramids[i].w, pyramids[i].w)), pickedMaterial);
+                        this.shapes.pyramid.draw(context, program_state, loc_transform.times(Mat4.rotation(0.2 * Math.PI * t, 0.5, 1, 1)).times(Mat4.translation(pyramids[i].pos[0], pyramids[i].pos[1], pyramids[i].pos[2])).times(Mat4.scale(pyramids[i].w, pyramids[i].w, pyramids[i].w)), pickedMaterial);
                     }
                 }
             } else {
