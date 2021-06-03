@@ -155,6 +155,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             "cabin": new Shape_From_File("assets/cabin.obj"),
             "rock": new Shape_From_File("assets/rock.obj"),
             "moonGround": new Shape_From_File("assets/moon.obj"),
+            "dessertGround": new Shape_From_File("assets/dessert.obj"),
             //"whiteGround": new Shape_From_File("assets/white.obj"),
             "sphere": new Subdivision_Sphere(6),
             "sphere4": new defs.Subdivision_Sphere(4),
@@ -222,6 +223,9 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             color_texture: new Texture("assets/moonTex.png"), light_depth_texture: null})
         this.spaceBG = new Material(new defs.Fake_Bump_Map(1), {
             ambient: 1.0, texture: new Texture("assets/SPACE2.png")})
+        this.dessertGround = new Material(new Shadow_Textured_Phong(1), {
+            color: color(0.5, 0.5, 0.5, 1), ambient: 0.3, diffusivity: 0.6, specularity: 0.5,
+            color_texture: new Texture("assets/dessertTex.png"), light_depth_texture: null})
 
         this.materials = {
             gold: new Material(new Shadow_Textured_Phong(1),
@@ -270,7 +274,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
     }
 
     make_control_panel() {
-        this.key_triggered_button("BrownBase environment", ["Control", "b"], () => this.attached = () => "brown");
+        this.key_triggered_button("Dessert environment", ["Control", "d"], () => this.attached = () => "dessert");
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
 
@@ -372,9 +376,14 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
              .times(Mat4.scale(300, 300, 300));
          let spaceBGTransform = Mat4.identity()
              .times(Mat4.scale(300, 300, 300));
+         let dessertTransform = Mat4.identity()
+             //.times(Mat4.rotation(Math.PI * (1 / 2), 0, 1, 0))
+             .times(Mat4.translation(0, 6, -5))
+             .times(Mat4.rotation(Math.PI / 2, -1, 0, 0))
+             .times(Mat4.scale(100, 100, 100));
 
 
-        program_state.draw_shadow = draw_shadow;
+         program_state.draw_shadow = draw_shadow;
 
         if (draw_light_source && shadow_pass) {
             this.shapes.sphere.draw(context, program_state,
@@ -383,7 +392,7 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
         }
         // Base BG
         if (this.attached === undefined) {
-            this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
+            this.shapes.dessertGround.draw(context, program_state, dessertTransform, shadow_pass? this.soil : this.pure);
         }
         // White & Space BG
         if (this.attached !== undefined) {
@@ -396,8 +405,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
                 this.shapes.moonGround.draw(context, program_state, moonTransform, shadow_pass? this.moonGround : this.pure);
                 this.shapes.sphere4.draw(context, program_state, spaceBGTransform, this.spaceBG);
             }
-            else if (envirmnt == "brown") {
-                this.shapes.cube.draw(context, program_state, model_trans_floor, shadow_pass? this.soil : this.pure);
+            else if (envirmnt == "dessert") {
+                this.shapes.dessertGround.draw(context, program_state, dessertTransform, shadow_pass? this.soil : this.pure);
             }
         }
 
