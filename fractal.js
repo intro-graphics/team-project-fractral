@@ -144,6 +144,7 @@ export class Fractal extends Scene {
 
         this.bgm = new Audio();
         this.bgm.src = 'assets/space.m4a';
+        this.bgm.volume = 0.3;
 
         this.materials = {
             gold: new Material(new defs.Textured_Reflected_Phong(),
@@ -205,7 +206,6 @@ export class Fractal extends Scene {
         this.key_triggered_button("Level 4", ["Control", "4"], () => this.attachedFlevel = () => 4);
         this.key_triggered_button("Space environment", ["Control", "s"], () => this.attached = () => "space");
         this.key_triggered_button("Earth environment", ["Control", "e"], () => this.attached = () => "earth");
-        this.key_triggered_button("White environment", ["Control", "w"], () => this.attached = () => "white");
         this.key_triggered_button("Grass environment", ["Control", "a"], () => this.attached = () => "grass");
 
 
@@ -255,9 +255,6 @@ export class Fractal extends Scene {
                 this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.snowy);
             } else if (envirmnt == "space") {
                 this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.space);
-            } else if (envirmnt == "white") {
-                this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.whiteTop);
-                this.shapes.cube.draw(context, program_state, flatTransform, this.materials.whiteGround);
             } else if (envirmnt == "grass") {
                 this.shapes.sphere4.draw(context, program_state, envirTransform, this.materials.grassTop);
                 this.shapes.cube.draw(context, program_state, flatTransform, this.materials.grassGround);
@@ -354,12 +351,6 @@ export class Fractal extends Scene {
                     this.shapes.cube.draw(context, program_state, loc_transform.times(Mat4.rotation(0.4 * Math.PI * t, 1, 1, 0)).times(Mat4.translation(boxes[i].pos[0], boxes[i].pos[1], boxes[i].pos[2])).times(Mat4.scale(boxes[i].r, boxes[i].r, boxes[i].r)), pickedMaterial);
                 }
             }
-        } else {
-            let model_transform_tree = Mat4.identity().times(Mat4.translation(-10, 0, 0)).times(Mat4.scale(10, 10, 10));
-            this.shapes.trunk.draw(context, program_state, model_transform_tree, this.materials.tree_texture); 
-
-            let model_transform_branch = Mat4.identity().times(Mat4.translation(10, 0, 0)).times(Mat4.scale(10, 10, 10));
-            this.shapes.branch.draw(context, program_state, model_transform_branch, this.materials.tree_texture);
         }
     }
 }

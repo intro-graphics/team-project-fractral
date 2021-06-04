@@ -132,7 +132,7 @@ const Square =
         }
     }
 
-export class Shadow_Demo extends Scene {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
+export class Shadow_Tree extends Scene {                           // **Obj_File_Demo** show how to load a single 3D model from an OBJ file.
     // Detailed model files can be used in place of simpler primitive-based
     // shapes to add complexity to a scene.  Simpler primitives in your scene
     // can just be thought of as placeholders until you find a model file
@@ -466,8 +466,8 @@ export class Shadow_Demo extends Scene {                           // **Obj_File
             let depth_gen = getRandomInt(2, 7);
             let result = angle_generator(depth_gen);
             let result_location = location_calc(result);
-            let temp_x = getRandomInt_avoidObjects(-20, 20, 1);
-            let temp_z = getRandomInt_avoidObjects(-40, 5, 0);
+            let temp_x = getRandomInt_avoidObjects(-35, 35, 1);
+            let temp_z = getRandomInt_avoidObjects(-55, 10, 0);
             let drawn = 0;
             result.push(result_location);
             result.push(temp_x);
