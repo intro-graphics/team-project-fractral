@@ -1,30 +1,32 @@
-# tiny-graphics.js
+# Factral Structure
 
-This is a small, single file JavaScript utility.  It organizes WebGL programs to be object-oriented and minimally cluttered.  
+# Contributors
+- Ryan Han: https://github.com/RyanHan0127
+- Euibin Kim: https://github.com/EuibinK
+- Jinbean Park: https://github.com/JinbeanPark
+- Nathan Chen: https://github.com/nathanachen
 
-Writing code with raw JavaScript and WebGL can be repetitive and tedious.  Using frameworks like three.js can create an undesired separation between you and the raw JavaScript and WebGL and common graphics operations you want to learn.  Unlike other frameworks, tiny-graphics.js is purpose-built for education, has small source code, and teaches you how it is made.
+## Factral.js
 
-This tiny library gives your WebGL program access to linear algebra routines, useful UI controls and readouts, and the drawing utilities needed by modern shader-based graphics.  It factors away the repetitive logic of GPU communication into re-usable objects.  The objects can be seamlessly shared between multiple WebGL contexts (drawing regions) on a web page.
+This file demonstrates what a typical factral structure is. We implemented a Menger sponge and a pyramid struture. Users can select different levels of the structure, which essentially means how many recursions you want to apply on the structure. As of now, we have 5 levels avaliable, including the 0th base level. Users can also select different backgrounds, which is a sphere mapping texture background. User can also select different colors. Both of our structures are using a reflection phong shader, which was implemented in GLSL. We use sphere mapping to make it look like a 3D view, or you can think of it as Google Street-View kind of thing. The whole point is to simulate graphically what a factral structure is.
 
-The tiny-graphics.js software library has accompanied UCLA Computer Science's 174a course (Intro to Computer Graphics) since 2016, replacing Edward Angel's supplemental code from his textbook "Interactive Computer Graphics: A Top-Down Approach with WebGL".  Compared to Angel's library, tiny-graphics.js offers more organization and functionality.
+## Shadow-tree.js
 
-This code library accompanies and supports a web project by the same author called "The Encyclopedia of Code", a crowd-sourced repository of WebGL demos and educational tutorials that uses an online editor.
+Whenever the user clicks the mouse, a new tree grows up on a random position except position of cube and house. The base environment is set to dessert environment, so the user can replace dessert environment with other environments. If the user wants to increase the level of fracture cube, the user can increase the level by clicking the button, same controls as `Factral.js`. User can also change the color of the cube, same control as `Factral.js`. User can clear all the trees if the simulation is cramped.
 
-To run a sample using tiny-graphics.js, visit its GitHub Pages link: https://encyclopedia-of-code.github.io/tiny-graphics-js/
+## Advanced Features
 
-To see all the demos and edit them:  Open the included "host.bat" or "host.command" file, then open localhost in your browser.  Open Developer Tools and create a workspace for your new folder.  Now you can edit the files, which is necessary to view the different demos.
+### Reflection
 
-To select a demo, open and edit main-scene.js.  Assign your choice to the Main_Scene variable.  Your choices for scenes are:
+`Textured_Reflected_Phong` is class that is implemented in GLSL. It is used in `Factral.js` file to simulate metallic look on the cube and the pyramid. We use a sphere mapping background to give that "Google Street-View" look. The reason why we did sphere mapping instead of cube mapping or also known as skybox is because it was a lot easier to implement. By using sphere mapping, we can extract texture one whole polygon instead extracting 6 texture faces of the cube. 
 
-* Minimal_Webgl_Demo
-* Transforms_Sandbox
-* Axes_Viewer_Test_Scene
-* Inertia_Demo
-* Collision_Demo
-* Many_Lights_Demo
-* Obj_File_Demo
-* Text_Demo
-* Scene_To_Texture_Demo
-* Surfaces_Demo
+### Shadowing
 
-The code comments in each file should help, especially if you look at the definition of Transforms_Sandbox.  So should the explanations that the demos print on the page.  Enjoy!
+Shadowing is applied to `shadow-tree.js` to give a realistic view of our factral tree structure. This shadow code was referenced from Wuyue Lu's repo. The idea is that there is an eye vector projected to the objects. We check if the depth of what the eye intersect is under a surface. That is, if the depth from the light point to the eye's intersection point's is larger than the depth from the light point to the closet object intersection, then it is a shadow. This is essentially a z-buffer concept when doing shadowing.
+
+## Reference
+- Wuyue Lu's shadow code: https://github.com/Robert-Lu/tiny-graphics-shadow_demo
+- Shadow Mapping from learnopengl.com: https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
+- Reflection from webglfundamentals.org: https://webglfundamentals.org/webgl/lessons/webgl-environment-maps.html
+- Metallic values: http://devernay.free.fr/cours/opengl/materials.html
+- HDRI for sphere mapping background: https://hdrihaven.com/
