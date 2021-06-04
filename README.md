@@ -1,6 +1,6 @@
 # Factral Structure
 
-# Contributors
+## Contributors
 - Ryan Han: https://github.com/RyanHan0127
 - Euibin Kim: https://github.com/EuibinK
 - Jinbean Park: https://github.com/JinbeanPark
